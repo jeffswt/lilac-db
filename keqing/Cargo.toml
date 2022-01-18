@@ -1,0 +1,7 @@
+[package]
+name = "keqing"
+version = "0.1.0"
+edition = "2021"
+description = "Local CI tool for LilacDB."
+
+[dependencies]
