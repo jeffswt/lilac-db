@@ -2,6 +2,7 @@ use std::fs;
 use std::io;
 use std::path;
 
+/// A cache file (or directory) path is composed of string components.
 type CachePath<'a> = &'a [&'a str];
 
 /// Checks if file exists in cache tree.
