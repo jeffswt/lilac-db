@@ -9,9 +9,9 @@ use crate::pipeline::context;
 ///
 /// Asynchronocy is not required and not recommended due to increased
 /// complexity.
-pub trait Task<'a, Params, Artifact>
+pub trait Task<Params, Artifact>
 where
-    Artifact: artifact::Artifact<'a>,
+    Artifact: artifact::Artifact,
 {
     /// Produce artifacts with parameters. Incoming artifacts should be
     /// manually requested from the upstream tasks dynamically.

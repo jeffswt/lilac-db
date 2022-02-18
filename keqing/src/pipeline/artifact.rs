@@ -18,9 +18,9 @@ pub type ArtifactID<'a> = &'a [&'a str];
 /// For artifacts that refer to local cache files, a validation on whether the
 /// cache still exists is suggested before actually producing this cache file
 /// (again).
-pub trait Artifact<'a> {
+pub trait Artifact {
     /// An identifier of this artifact.
-    const id: ArtifactID<'a>;
+    fn id(&self) -> ArtifactID;
 }
 
 /// Provides an interface to file-system-like operations upon artifacts or
