@@ -1,6 +1,3 @@
-mod pipeline {
-    pub mod artifact;
-    pub mod task;
-}
+mod pipeline;
 
 fn main() {}

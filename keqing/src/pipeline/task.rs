@@ -1,4 +1,5 @@
 use crate::pipeline::artifact;
+use crate::pipeline::context;
 
 /// A (synchronous) task node consuming artifacts and produces exactly 1
 /// artifact.
@@ -16,5 +17,5 @@ where
     /// manually requested from the upstream tasks dynamically.
     ///
     /// We suggest producing exactly 1 artifact.
-    fn execute(params: &Params) -> Vec<Artifact>;
+    fn execute(context: context::TaskContext, params: &Params) -> Artifact;
 }
