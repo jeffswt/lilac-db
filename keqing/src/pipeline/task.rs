@@ -1,23 +1,20 @@
 use crate::pipeline::artifact;
 
-/// A (synchronous) task node consuming artifacts and producing artifacts.
+/// A (synchronous) task node consuming artifacts and produces exactly 1
+/// artifact.
 ///
-/// Task nodes should implement a static class inheriting this trait and inject
-/// it into the pipeline scheduler.
+/// Task nodes should implement a factory class inheriting this trait. Every
+/// time a task is called a new instance would be initialized.
 ///
-/// Since the underlying processes had already taken care of the parallelism
-/// and consumed all disk resources, a task doesn't have to be asynchronous,
-/// and it shouldn't.
+/// Asynchronocy is not required and not recommended due to increased
+/// complexity.
 pub trait Task<'a, Params, Artifact>
 where
     Artifact: artifact::Artifact<'a>,
 {
-    /// A declarative definition on if the artifact ID may be produced by this
-    /// task node. Not that two nodes may **NEVER** produce the same artifacts.
-    fn produces(id: &artifact::ArtifactID<'a>) -> bool;
-
-    /// Produce artifacts with parameters. Incoming artifacts are to be
-    /// manually taken from the scheduler as it might be difficult to
-    /// determine.
+    /// Produce artifacts with parameters. Incoming artifacts should be
+    /// manually requested from the upstream tasks dynamically.
+    ///
+    /// We suggest producing exactly 1 artifact.
     fn execute(params: &Params) -> Vec<Artifact>;
 }

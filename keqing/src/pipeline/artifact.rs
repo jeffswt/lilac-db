@@ -13,6 +13,8 @@ pub type ArtifactID<'a> = &'a [&'a str];
 /// exist, or refer to none and instead be a logical step that performs certain
 /// tasks on a build pipeline.
 ///
+/// One artifact ID **MUST** refer to at most 1 local file.
+///
 /// For artifacts that refer to local cache files, a validation on whether the
 /// cache still exists is suggested before actually producing this cache file
 /// (again).
