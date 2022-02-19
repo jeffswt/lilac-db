@@ -4,7 +4,7 @@ use std::path;
 
 /// Path of a produced artifact file (or directory) is composed of string
 /// components.
-pub type ArtifactID<'a> = &'a [&'a str];
+pub type ArtifactID<'a> = [&'a str];
 
 /// A specific artifact node either consumed by, produced from tasks, or
 /// requested by the user.
@@ -32,14 +32,14 @@ pub struct ArtifactManager;
 impl ArtifactManager {
     /// Validate if an `ArtifactID` has a corresponding file lying in the file
     /// system.
-    pub fn exists(&self, id: ArtifactID) -> bool {
+    pub fn exists(&self, id: &ArtifactID) -> bool {
         path::PathBuf::from(self.expose_path(id)).exists()
     }
 
     /// Opens a handle to an (existing) artifact file.
     ///
     /// Attempting to open a non-existent ID would result in an error.
-    pub fn read(&self, id: ArtifactID) -> io::Result<fs::File> {
+    pub fn read(&self, id: &ArtifactID) -> io::Result<fs::File> {
         if !self.exists(id) {
             return Err(io::Error::new(
                 io::ErrorKind::NotFound,
@@ -53,7 +53,7 @@ impl ArtifactManager {
     ///
     /// Attempting to open an existing file would result in an error. Use
     /// `.overwrite` instead.
-    pub fn write(&self, id: ArtifactID) -> io::Result<fs::File> {
+    pub fn write(&self, id: &ArtifactID) -> io::Result<fs::File> {
         if self.exists(id) {
             return Err(io::Error::new(
                 io::ErrorKind::AlreadyExists,
@@ -73,7 +73,7 @@ impl ArtifactManager {
     /// artifact with given ID is existent).
     ///
     /// Warning: will delete original file if not taken with care.
-    pub fn overwrite(&self, id: ArtifactID) -> io::Result<fs::File> {
+    pub fn overwrite(&self, id: &ArtifactID) -> io::Result<fs::File> {
         if self.exists(id) {
             self.purge(id)?;
         }
@@ -83,19 +83,19 @@ impl ArtifactManager {
     /// Removes artifact file in the underlying FS.
     ///
     /// Removing a non-existent ID would result in an error.
-    pub fn purge(&self, id: ArtifactID) -> io::Result<()> {
+    pub fn purge(&self, id: &ArtifactID) -> io::Result<()> {
         fs::remove_file(self.expose_path(id))
     }
 
     /// Removes entire artifact directory in the underlying FS.
     ///
     /// Removing a non-existent directory would result in an error.
-    pub fn purge_dir(&self, dir_id: ArtifactID) -> io::Result<()> {
+    pub fn purge_dir(&self, dir_id: &ArtifactID) -> io::Result<()> {
         fs::remove_dir_all(self.expose_path(dir_id))
     }
 
     /// Retrieves the absolute path in FS by `ArtifactID`.
-    fn expose_path(&self, id: ArtifactID) -> String {
+    fn expose_path(&self, id: &ArtifactID) -> String {
         let parent_path = "./cache"; // TODO: config-ize this field.
         let parent = match fs::canonicalize(parent_path) {
             Ok(ok) => ok,
