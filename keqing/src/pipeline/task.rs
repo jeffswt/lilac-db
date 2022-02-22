@@ -13,9 +13,12 @@ pub trait Task<Params, Artifact>
 where
     Artifact: artifact::Artifact,
 {
+    /// Initializes task object.
+    fn with(context: context::TaskContext) -> Self;
+
     /// Produce artifacts with parameters. Incoming artifacts should be
     /// manually requested from the upstream tasks dynamically.
     ///
     /// We suggest producing exactly 1 artifact.
-    fn execute(context: context::TaskContext, params: &Params) -> Artifact;
+    fn execute(&mut self, params: Params) -> Artifact;
 }
