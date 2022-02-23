@@ -1,6 +1,6 @@
 # Move HEAD to target branch.
 
-$(ARTIFACTS)/git/checkout/$(ARG_BRANCH):
+$(ARTIFACTS)/git/checkout/%:
 	$(BIN_BASH) "$(RULES)/git/staged-all.sh"
-	$(BIN_GIT) checkout "$(ARG_BRANCH)"
+	$(BIN_GIT) checkout "$*"
 	$(BIN_BASH) "$(RULES)/git/staged-all.sh"
