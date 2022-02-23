@@ -16,6 +16,7 @@ RULES           = $(KEQING)/rules
 BIN_BASH        = bash
 BIN_GIT         = git
 BIN_RUSTC       = rustc
+BIN_TAR         = tar
 
 # Index of target rules
 include $(RULES)/git/archive.mk
