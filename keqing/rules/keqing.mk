@@ -7,18 +7,22 @@ ARG_BRANCH      = $(_ARG_BRANCH)
 ARG_COMMIT_HASH = $(_ARG_COMMIT_HASH)
 ARG_COMMIT_MSG  = $(_ARG_COMMIT_MSG)
 
-# All variable definitions
-KEQING          = ./keqing
-ARTIFACTS       = $(KEQING)/.artifacts
-RULES           = $(KEQING)/rules
-
 # Applications
 BIN_BASH        = bash
 BIN_GIT         = git
+BIN_MAKE        = make
 BIN_PERL        = perl
 BIN_PYTHON3     = python3
 BIN_RUSTC       = rustc
 BIN_TAR         = tar
+
+# Resource definitions
+KEQING          = ./keqing
+ARTIFACTS       = $(KEQING)/.artifacts
+RULES           = $(KEQING)/rules
+
+# Action references
+ACTION_DEPENDS   = $(BIN_MAKE) --makefile="$(RULES)/keqing.mk"
 
 # Index of target rules
 include $(RULES)/git/archive.mk
