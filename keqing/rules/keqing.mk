@@ -15,6 +15,7 @@ RULES           = $(KEQING)/rules
 # Applications
 BIN_BASH        = bash
 BIN_GIT         = git
+BIN_PYTHON3     = python3
 BIN_RUSTC       = rustc
 BIN_TAR         = tar
 
