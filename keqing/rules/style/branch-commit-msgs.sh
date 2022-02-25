@@ -5,8 +5,8 @@ bin_python3=$3
 git_branch=$4
 path_rules=$5
 
-# read commits diff from current branch to master
-commits=$($bin_git cherry -v master)
+# read commits diff from given branch to master
+commits=$("$bin_git" cherry -v master "$git_branch")
 
 # split commit list into lines
 IFS=$'\n'
@@ -23,3 +23,5 @@ for commit in $commits; do
         exit 1
     fi
 done
+
+echo "All commits on branch '$git_branch' are well-styled."
