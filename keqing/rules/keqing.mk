@@ -20,6 +20,9 @@ BIN_TAR         = tar
 
 # Index of target rules
 include $(RULES)/git/archive.mk
+include $(RULES)/git/branch.mk
 include $(RULES)/git/checkout.mk
 include $(RULES)/git/commit.mk
 include $(RULES)/git/workspace.mk
+
+include $(RULES)/style/branch-name.mk
