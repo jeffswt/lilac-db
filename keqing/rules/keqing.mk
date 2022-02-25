@@ -15,6 +15,7 @@ RULES           = $(KEQING)/rules
 # Applications
 BIN_BASH        = bash
 BIN_GIT         = git
+BIN_PERL        = perl
 BIN_PYTHON3     = python3
 BIN_RUSTC       = rustc
 BIN_TAR         = tar
@@ -26,4 +27,5 @@ include $(RULES)/git/checkout.mk
 include $(RULES)/git/commit.mk
 include $(RULES)/git/workspace.mk
 
+include $(RULES)/style/branch-commit-msgs.mk
 include $(RULES)/style/branch-name.mk
