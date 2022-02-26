@@ -7,6 +7,7 @@ ARG_COMMIT_MSG  = $(_ARG_COMMIT_MSG)
 
 # Applications
 BIN_BASH        = bash
+BIN_CURL        = curl
 BIN_GIT         = git
 BIN_MAKE        = make
 BIN_MKDIR       = mkdir
@@ -31,6 +32,8 @@ include $(RULES)/git/branch.mk
 include $(RULES)/git/checkout.mk
 include $(RULES)/git/commit.mk
 include $(RULES)/git/workspace.mk
+
+include $(RULES)/install/environ.mk
 
 include $(RULES)/style/branch-commit-msgs.mk
 include $(RULES)/style/branch-name.mk
