@@ -17,6 +17,7 @@ BIN_TAR         = tar
 BIN_TOUCH       = touch
 
 # Resource definitions
+CWD             = $(shell pwd)
 KEQING          = ./keqing
 ARTIFACTS       = $(KEQING)/.artifacts
 RULES           = $(KEQING)/rules
