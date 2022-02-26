@@ -3,18 +3,18 @@
 # Current working directory must be at repository root.
 
 # External arguments
-ARG_BRANCH      = $(_ARG_BRANCH)
-ARG_COMMIT_HASH = $(_ARG_COMMIT_HASH)
 ARG_COMMIT_MSG  = $(_ARG_COMMIT_MSG)
 
 # Applications
 BIN_BASH        = bash
 BIN_GIT         = git
 BIN_MAKE        = make
+BIN_MKDIR       = mkdir
 BIN_PERL        = perl
 BIN_PYTHON3     = python3
 BIN_RUSTC       = rustc
 BIN_TAR         = tar
+BIN_TOUCH       = touch
 
 # Resource definitions
 KEQING          = ./keqing
