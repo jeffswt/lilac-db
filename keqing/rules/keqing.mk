@@ -5,7 +5,7 @@
 # External arguments
 ARG_COMMIT_MSG  = $(_ARG_COMMIT_MSG)
 
-# Applications
+# Shell utilities
 BIN_BASH        = bash
 BIN_CURL        = curl
 BIN_GIT         = git
@@ -13,9 +13,13 @@ BIN_MAKE        = make
 BIN_MKDIR       = mkdir
 BIN_PERL        = perl
 BIN_PYTHON3     = python3
-BIN_RUSTC       = rustc
 BIN_TAR         = tar
 BIN_TOUCH       = touch
+
+# Rust toolchain
+BIN_CARGO       = cargo
+BIN_RUSTC       = rustc
+BIN_RUSTUP      = rustup
 
 # Resource definitions
 CWD             = $(shell pwd)
@@ -37,3 +41,4 @@ include $(RULES)/install/environ.mk
 
 include $(RULES)/style/branch-commit-msgs.mk
 include $(RULES)/style/branch-name.mk
+include $(RULES)/style/rustfmt.mk
