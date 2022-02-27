@@ -5,16 +5,22 @@
 # External arguments
 ARG_COMMIT_MSG  = $(_ARG_COMMIT_MSG)
 
-# Shell utilities
+# GNU coreutils
 BIN_BASH        = bash
-BIN_CURL        = curl
+BIN_BASENAME    = basename
+BIN_CAT         = cat
+BIN_FIND        = find
 BIN_GIT         = git
 BIN_MAKE        = make
 BIN_MKDIR       = mkdir
+BIN_TAR         = tar
+BIN_TEE         = tee
+BIN_TOUCH       = touch
+
+# Shell binaries
+BIN_CURL        = curl
 BIN_PERL        = perl
 BIN_PYTHON3     = python3
-BIN_TAR         = tar
-BIN_TOUCH       = touch
 
 # Rust toolchain
 BIN_CARGO       = cargo
