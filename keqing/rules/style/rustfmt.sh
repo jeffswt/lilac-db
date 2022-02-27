@@ -76,6 +76,9 @@ done
 
 # report error if lint failed
 if [[ $lintok != "true" ]]; then
-    echo "rustfmt: Certain projects had failed style tests."
+    echo "Certain Rust sub-projects had failed style tests."
     exit 1
+else
+    echo "All Rust sub-projects are well-styled."
+    exit 0
 fi
