@@ -8,6 +8,9 @@ path_rules=$5
 # read commits diff from given branch to master
 commits=$("$bin_git" cherry -v master "$git_branch")
 
+# mark an error here if something fails
+lintok="true"
+
 # split commit list into lines
 IFS=$'\n'
 for commit in $commits; do
@@ -19,9 +22,14 @@ for commit in $commits; do
     "$bin_python3" "$path_rules/style/commit-msg.py" --lint "$commit_msg"
     # exit on error
     if [ $? -ne 0 ]; then
+        lintok="false"
         echo "Commit '$commit_hash' on branch '$git_branch' is badly styled."
-        exit 1
     fi
 done
 
-echo "All commits on branch '$git_branch' are well-styled."
+if [[ $lintok == "true" ]]; then
+    echo "All commits on branch '$git_branch' are well-styled."
+    exit 0
+else
+    exit 1
+fi
