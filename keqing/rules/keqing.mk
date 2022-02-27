@@ -28,7 +28,7 @@ ARTIFACTS       = $(KEQING)/.artifacts
 RULES           = $(KEQING)/rules
 
 # Action references
-ACTION_DEPENDS   = $(BIN_MAKE) --makefile="$(RULES)/keqing.mk"
+ACTION_DEPENDS   = $(BIN_MAKE) --makefile="$(RULES)/keqing.mk" --silent
 
 # Index of target rules
 include $(RULES)/git/archive.mk
