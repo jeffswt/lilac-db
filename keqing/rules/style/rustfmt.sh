@@ -46,7 +46,7 @@ elif [[ ${11} == "branch" ]]; then
 
 else
     echo "keqing/rustfmt: Invalid format targets."
-    exit 1
+    exit 128
 fi
 
 # flag marking if all subprojects are styled ok
