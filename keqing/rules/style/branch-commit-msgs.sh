@@ -3,11 +3,12 @@ bin_echo=$1
 bin_git=$2
 bin_perl=$3
 bin_python3=$4
-git_branch=$5
+
+branch=$5
 path_rules=$6
 
 # read commits diff from given branch to master
-commits=$("$bin_git" cherry -v master "$git_branch")
+commits=$("$bin_git" cherry -v master "$branch")
 
 # mark an error here if something fails
 lintok="true"
@@ -24,12 +25,12 @@ for commit in $commits; do
     # exit on error
     if [ $? -ne 0 ]; then
         lintok="false"
-        "$bin_echo" "Commit '$commit_hash' on branch '$git_branch' is badly styled."
+        "$bin_echo" "Commit '$commit_hash' on branch '$branch' is badly styled."
     fi
 done
 
 if [[ $lintok == "true" ]]; then
-    "$bin_echo" "All commits on branch '$git_branch' are well-styled."
+    "$bin_echo" "All commits on branch '$branch' are well-styled."
     exit 0
 else
     exit 1
