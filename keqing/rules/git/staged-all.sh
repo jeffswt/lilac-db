@@ -1,8 +1,10 @@
-# Validates if the current workspace is clean for VCS operations.
+# external arguments
+bin_echo=$1
+bin_git=$2
 
-if [ -n "$(git status --porcelain)" ]; then
-    cur_branch=$(git branch --show-current)
-    echo "There are still unstaged changes on '$cur_branch'."
+if [ -n "$("$bin_git" status --porcelain)" ]; then
+    cur_branch=$("$bin_git" branch --show-current)
+    "$bin_echo" "There are still unstaged changes on '$cur_branch'."
     exit 1
 else
     exit 0
