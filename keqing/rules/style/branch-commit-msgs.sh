@@ -1,9 +1,10 @@
 # set parameters
-bin_git=$1
-bin_perl=$2
-bin_python3=$3
-git_branch=$4
-path_rules=$5
+bin_echo=$1
+bin_git=$2
+bin_perl=$3
+bin_python3=$4
+git_branch=$5
+path_rules=$6
 
 # read commits diff from given branch to master
 commits=$("$bin_git" cherry -v master "$git_branch")
@@ -15,7 +16,7 @@ lintok="true"
 IFS=$'\n'
 for commit in $commits; do
     # extract commit hash from log
-    commit_hash=$(echo "$commit" | "$bin_perl" -pe 's/^\+ ([0-9a-f]{40}) .*?$/\1/g')
+    commit_hash=$("$bin_echo" "$commit" | "$bin_perl" -pe 's/^\+ ([0-9a-f]{40}) .*?$/\1/g')
     # extract commit message from hash
     commit_msg=$("$bin_git" log "$commit_hash" -1 --pretty=format:"%B")
     # validate conventional commit style
@@ -23,12 +24,12 @@ for commit in $commits; do
     # exit on error
     if [ $? -ne 0 ]; then
         lintok="false"
-        echo "Commit '$commit_hash' on branch '$git_branch' is badly styled."
+        "$bin_echo" "Commit '$commit_hash' on branch '$git_branch' is badly styled."
     fi
 done
 
 if [[ $lintok == "true" ]]; then
-    echo "All commits on branch '$git_branch' are well-styled."
+    "$bin_echo" "All commits on branch '$git_branch' are well-styled."
     exit 0
 else
     exit 1

@@ -4,11 +4,15 @@ artifacts=${2}
 bin_basename=${3}
 bin_cargo=${4}
 bin_cat=${5}
-bin_find=${6}
-bin_git=${7}
-bin_mkdir=${8}
-bin_rustup=${9}
-bin_tee=${10}
+bin_echo=${6}
+bin_find=${7}
+bin_git=${8}
+bin_mkdir=${9}
+bin_rustup=${10}
+bin_tee=${11}
+
+arg_option=${12}
+arg_param=${13}
 
 # some parameters set by argument parser
 reporoot="."    # root of lint target directory (containing subprojects)
@@ -17,15 +21,15 @@ lazylint="true" # set to 'true' to skip subproject if report already exists
 
 # resolve target branch & commit, target repository root
 # extract VCS snapshot, create test report dirs
-if [[ ${11} == "workspace" ]]; then
+if [[ $arg_option == "workspace" ]]; then
     reporoot="."
     reportroot="$artifacts/style/rustfmt/workspace"
     lazylint="false"
 
     "$bin_mkdir" --parents "$reportroot"
 
-elif [[ ${11} == "commit" ]]; then
-    commit=${12}
+elif [[ $arg_option == "commit" ]]; then
+    commit=$arg_param
     reporoot="$artifacts/git/workspace/$commit"
     reportroot="$artifacts/style/rustfmt/commit/$commit"
     lazylint="true"
@@ -33,8 +37,8 @@ elif [[ ${11} == "commit" ]]; then
     "$bin_mkdir" --parents "$reportroot"
     eval $action_depends "$artifacts/git/workspace/flags/$commit"
 
-elif [[ ${11} == "branch" ]]; then
-    branch=${12}
+elif [[ $arg_option == "branch" ]]; then
+    branch=$arg_param
     commit=$("$bin_git" log -n 1 $branch --pretty=format:"%H")
     reporoot="$artifacts/git/workspace/$commit"
     reportroot="$artifacts/style/rustfmt/commit/$commit"
@@ -45,7 +49,7 @@ elif [[ ${11} == "branch" ]]; then
     eval $action_depends "$artifacts/git/workspace/flags/$commit"
 
 else
-    echo "keqing/rustfmt: Invalid format targets."
+    "$bin_echo" "keqing/rustfmt: Invalid format targets."
     exit 128
 fi
 
@@ -76,9 +80,9 @@ done
 
 # report error if lint failed
 if [[ $lintok != "true" ]]; then
-    echo "Certain Rust sub-projects had failed style tests."
+    "$bin_echo" "Certain Rust sub-projects had failed style tests."
     exit 1
 else
-    echo "All Rust sub-projects are well-styled."
+    "$bin_echo" "All Rust sub-projects are well-styled."
     exit 0
 fi
