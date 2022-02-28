@@ -1,15 +1,14 @@
-# Assert that the current branch may be safely merged into `master` with no
-# merge conflicts.
-
 # external arguments
-bin_bash=$1
-bin_echo=$2
-bin_git=$3
-rules=$4
-branch=$5
+action_depends=$1
+artifacts=$2
+bin_echo=$3
+bin_git=$4
+rules=$5
+
+branch=$6
 
 # clean workspace and checkout
-"$bin_bash" "$rules/git/staged-all.sh"
+eval $action_depends "$artifacts/git/staged-all"
 if [[ $? != 0 ]]; then
     exit 1
 fi
@@ -18,7 +17,7 @@ if [[ $? != 0 ]]; then
     "$bin_echo" "Failed to checkout to branch '$branch'."
     exit 1
 fi
-"$bin_bash" "$rules/git/staged-all.sh"
+eval $action_depends "$artifacts/git/staged-all"
 if [[ $? != 0 ]]; then
     exit 1
 fi

@@ -42,6 +42,7 @@ include $(RULES)/git/archive.mk
 include $(RULES)/git/branch.mk
 include $(RULES)/git/checkout.mk
 include $(RULES)/git/commit.mk
+include $(RULES)/git/no-merge-conflicts.mk
 include $(RULES)/git/staged-all.mk
 include $(RULES)/git/workspace.mk
 
