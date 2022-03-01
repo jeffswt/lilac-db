@@ -5,37 +5,16 @@
 # External arguments
 ARG_COMMIT_MSG  = $(_ARG_COMMIT_MSG)
 
-# GNU coreutils
-BIN_BASH        = bash
-BIN_BASENAME    = basename
-BIN_CAT         = cat
-BIN_ECHO        = echo
-BIN_FIND        = find
-BIN_GIT         = git
-BIN_MAKE        = make
-BIN_MKDIR       = mkdir
-BIN_TAR         = tar
-BIN_TEE         = tee
-BIN_TOUCH       = touch
-
-# Shell binaries
-BIN_CURL        = curl
-BIN_PERL        = perl
-BIN_PYTHON3     = python3
-
-# Rust toolchain
-BIN_CARGO       = cargo
-BIN_RUSTC       = rustc
-BIN_RUSTUP      = rustup
+# binary declarations
+include $(RULES)/arguments.mk
 
 # Resource definitions
-CWD             = $(shell pwd)
 KEQING          = ./keqing
 ARTIFACTS       = $(KEQING)/.artifacts
 RULES           = $(KEQING)/rules
 
 # Action references
-ACTION_DEPENDS   = $(BIN_MAKE) --makefile="$(RULES)/keqing.mk" --silent
+ACTION_DEPENDS  = $(BIN_MAKE) --makefile="$(RULES)/keqing.mk" --silent
 
 # Index of target rules
 include $(RULES)/git/archive.mk
