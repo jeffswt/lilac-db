@@ -14,10 +14,9 @@ bin_rustup=${12}
 bin_tee=${13}
 rules=${14}
 
-arg_action=${15}        # build, test, lint or other actions
-arg_artifact_path=${16} # '.artifacts/[BUILD/RELEASE]/workspace/project/...'
-arg_option=${17}        # workspace / commit / branch
-arg_param=${18}         # commit hash / branch name
+arg_action=${15} # the performed action, also '.artifacts/[BUILD/RELEASE]/workspace/project/...'
+arg_option=${16} # workspace / commit / branch
+arg_param=${17}  # commit hash / branch name
 
 # some parameters set by argument parser
 repo_root="."        # root of target directory (containing subprojects)
@@ -29,7 +28,7 @@ recipe_name=""       # identifier of the build target
 # extract VCS snapshot, get recipe name
 if [[ $arg_option == "workspace" ]]; then
     repo_root="."
-    output_root="$artifacts/$arg_artifact_path/workspace"
+    output_root="$artifacts/$arg_action/workspace"
     recipe_name="workspace"
 
     "$bin_mkdir" --parents "$output_root"
@@ -38,7 +37,7 @@ elif [[ $arg_option == "commit" ]]; then
     commit=$arg_param
 
     repo_root="$artifacts/git/workspace/$commit"
-    output_root="$artifacts/$arg_artifact_path/commit/$commit"
+    output_root="$artifacts/$arg_action/commit/$commit"
     recipe_name="commit/$commit"
 
     "$bin_mkdir" --parents "$output_root"
@@ -49,8 +48,8 @@ elif [[ $arg_option == "branch" ]]; then
     commit=$("$bin_git" log -n 1 $branch --pretty=format:"%H")
 
     repo_root="$artifacts/git/workspace/$commit"
-    output_root="$artifacts/$arg_artifact_path/commit/$commit"
-    output_clone_root="$artifacts/$arg_artifact_path/branch/$branch"
+    output_root="$artifacts/$arg_action/commit/$commit"
+    output_clone_root="$artifacts/$arg_action/branch/$branch"
     recipe_name="branch/$branch@$commit"
 
     "$bin_mkdir" --parents "$output_root"
