@@ -95,7 +95,7 @@ __build_targets() {
         arg_subproj_root=$("$bin_readlink" --canonicalize "$repo_root/$project")
         arg_artifact_root=$("$bin_readlink" --canonicalize "$output_root/$project")
         arg_subproj_makefile=$("$bin_readlink" --canonicalize "$repo_root/$project/Makefile")
-        arg_arguments_makefile=$("$bin_readlink" --canonicalize "$rules/arguments.mk")
+        arg_arguments_makefile=$("$bin_readlink" --canonicalize "$rules/misc/arguments.mk")
 
         # create directories
         "$bin_mkdir" --parents "$output_root/$project" # not using the readlink here

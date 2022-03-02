@@ -10,11 +10,9 @@ KEQING          = ./keqing
 ARTIFACTS       = $(KEQING)/.artifacts
 RULES           = $(KEQING)/rules
 
-# binary declarations
-include $(RULES)/arguments.mk
-
-# depend on this to be phony targets
-include $(RULES)/always-execute.mk
+# miscellany
+include $(RULES)/misc/always-execute.mk
+include $(RULES)/misc/arguments.mk
 
 # Action references
 ACTION_DEPENDS  = "$(BIN_MAKE)" --makefile="$(RULES)/keqing.mk" --silent
