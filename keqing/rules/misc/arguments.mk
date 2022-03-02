@@ -1,4 +1,5 @@
-# List of binary programs referenced by the make script.
+# List of binary programs (and other common arguments) referenced by the make
+# script.
 
 # GNU coreutils
 BIN_BASH        = bash

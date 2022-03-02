@@ -1,3 +1,4 @@
+# Generate release builds to workspace, specific commit or branch (lazilly).
 
 $(ARTIFACTS)/build/release/workspace: $(ARTIFACTS)/always-execute
 	@$(ACTION_SUBPROJ) build/release workspace
