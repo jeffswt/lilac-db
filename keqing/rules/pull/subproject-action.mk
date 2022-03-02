@@ -34,7 +34,7 @@
 #   * `location` is the actual commit hash or branch name should `target` be
 #     either of them.
 
-__PULL__SUBPROJECT_ACTION = "$(BIN_BASH)" "$(RULES)/pull/subproject-action.sh" "$(ACTION_DEPENDS)" "$(ARTIFACTS)" "$(BIN_BASENAME)" "$(BIN_CARGO)" "$(BIN_CAT)" "$(BIN_ECHO)" "$(BIN_FIND)" "$(BIN_GIT)" "$(BIN_MAKE)" "$(BIN_MKDIR)" "$(BIN_READLINK)" "$(BIN_RUSTUP)" "$(BIN_TEE)" "$(RULES)"
+__PULL__SUBPROJECT_ACTION = "$(BIN_BASH)" "$(RULES)/pull/subproject-action.sh" "$(ACTION_DEPENDS)" "$(ARTIFACTS)" "$(BIN_BASENAME)" "$(BIN_CARGO)" "$(BIN_CAT)" "$(BIN_CP)" "$(BIN_ECHO)" "$(BIN_FIND)" "$(BIN_GIT)" "$(BIN_MAKE)" "$(BIN_MKDIR)" "$(BIN_READLINK)" "$(BIN_RM)" "$(BIN_RUSTUP)" "$(BIN_TEE)" "$(BIN_TOUCH)" "$(RULES)"
 
 $(ARTIFACTS)/pull/build/workspace/flag:
 	@$(ACTION_SUBPROJ) build/release workspace

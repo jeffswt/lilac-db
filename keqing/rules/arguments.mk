@@ -4,12 +4,14 @@
 BIN_BASH        = bash
 BIN_BASENAME    = basename
 BIN_CAT         = cat
+BIN_CP          = cp
 BIN_ECHO        = echo
 BIN_FIND        = find
 BIN_GIT         = git
 BIN_MAKE        = make
 BIN_MKDIR       = mkdir
 BIN_READLINK    = readlink
+BIN_RM          = rm
 BIN_TAR         = tar
 BIN_TEE         = tee
 BIN_TOUCH       = touch
