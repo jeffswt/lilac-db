@@ -44,8 +44,9 @@ if [[ $? != 0 ]]; then
 fi
 
 # aborting the merge anyway (you'll need to manually merge it)
-"$bin_git" merge --abort
+abort_merge=$("$bin_git" merge --abort 2>&1)
 if [[ $? != 0 && $abort_merge != *"MERGE_HEAD missing"* ]]; then
+    "$bin_echo" "$abort_merge"
     "$bin_echo" "Merge abort failed (this normally shouldn't happen)!"
     exit 1
 fi
