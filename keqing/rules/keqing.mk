@@ -19,6 +19,8 @@ ACTION_DEPENDS  = "$(BIN_MAKE)" --makefile="$(RULES)/keqing.mk" --silent
 ACTION_SUBPROJ  = $(__PULL__SUBPROJECT_ACTION)
 
 # Index of target rules
+include $(RULES)/build/release.mk
+
 include $(RULES)/fix/style.mk
 
 include $(RULES)/git/archive.mk
