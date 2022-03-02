@@ -26,68 +26,78 @@ recipe_name=""       # identifier of the build target
 
 # resolve target branch & commit, target repository root
 # extract VCS snapshot, get recipe name
-if [[ $arg_option == "workspace" ]]; then
-    repo_root="."
-    output_root="$artifacts/$arg_action/workspace"
-    recipe_name="workspace"
+__parse_arguments() {
+    if [[ $arg_option == "workspace" ]]; then
+        repo_root="."
+        output_root="$artifacts/$arg_action/workspace"
+        recipe_name="workspace"
 
-    "$bin_mkdir" --parents "$output_root"
+        "$bin_mkdir" --parents "$output_root"
 
-elif [[ $arg_option == "commit" ]]; then
-    commit=$arg_param
+    elif [[ $arg_option == "commit" ]]; then
+        commit=$arg_param
 
-    repo_root="$artifacts/git/workspace/$commit"
-    output_root="$artifacts/$arg_action/commit/$commit"
-    recipe_name="commit/$commit"
+        repo_root="$artifacts/git/workspace/$commit"
+        output_root="$artifacts/$arg_action/commit/$commit"
+        recipe_name="commit/$commit"
 
-    "$bin_mkdir" --parents "$output_root"
-    eval $action_depends "$artifacts/git/workspace/flags/$commit"
+        "$bin_mkdir" --parents "$output_root"
+        eval $action_depends "$artifacts/git/workspace/flags/$commit"
 
-elif [[ $arg_option == "branch" ]]; then
-    branch=$arg_param
-    commit=$("$bin_git" log -n 1 $branch --pretty=format:"%H")
+    elif [[ $arg_option == "branch" ]]; then
+        branch=$arg_param
+        commit=$("$bin_git" log -n 1 $branch --pretty=format:"%H")
 
-    repo_root="$artifacts/git/workspace/$commit"
-    output_root="$artifacts/$arg_action/commit/$commit"
-    output_clone_root="$artifacts/$arg_action/branch/$branch"
-    recipe_name="branch/$branch@$commit"
+        repo_root="$artifacts/git/workspace/$commit"
+        output_root="$artifacts/$arg_action/commit/$commit"
+        output_clone_root="$artifacts/$arg_action/branch/$branch"
+        recipe_name="branch/$branch@$commit"
 
-    "$bin_mkdir" --parents "$output_root"
-    "$bin_mkdir" --parents "$output_clone_root"
-    eval $action_depends "$artifacts/git/workspace/flags/$commit"
+        "$bin_mkdir" --parents "$output_root"
+        "$bin_mkdir" --parents "$output_clone_root"
+        eval $action_depends "$artifacts/git/workspace/flags/$commit"
 
-else
-    "$bin_echo" "keqing/subproject-action: Invalid arguments."
-    exit 128
-fi
+    else
+        "$bin_echo" "keqing/subproject-action: Invalid arguments."
+        exit 128
+    fi
+}
 
 # execute action on subprojects in given order
-IFS=$'\n'
-for project in $("$bin_cat" "$rules/pull/subproject-action-order.txt"); do
-    # skip comments
-    if [[ $project =~ ^\# ]]; then
-        continue
-    fi
+__build_targets() {
+    IFS=$'\n'
+    for project in $("$bin_cat" "$rules/pull/subproject-action-order.txt"); do
+        # skip comments
+        if [[ $project =~ ^\# ]]; then
+            continue
+        fi
 
-    # resolve make arguments
-    arg_subproj_root=$("$bin_readlink" --canonicalize "$repo_root/$project")
-    arg_artifact_root=$("$bin_readlink" --canonicalize "$output_root/$project")
-    arg_subproj_makefile=$("$bin_readlink" --canonicalize "$repo_root/$project/Makefile")
-    arg_arguments_makefile=$("$bin_readlink" --canonicalize "$rules/arguments.mk")
+        # resolve make arguments
+        arg_subproj_root=$("$bin_readlink" --canonicalize "$repo_root/$project")
+        arg_artifact_root=$("$bin_readlink" --canonicalize "$output_root/$project")
+        arg_subproj_makefile=$("$bin_readlink" --canonicalize "$repo_root/$project/Makefile")
+        arg_arguments_makefile=$("$bin_readlink" --canonicalize "$rules/arguments.mk")
 
-    # create directories
-    "$bin_mkdir" --parents "$output_root/$project" # not using the readlink here
+        # create directories
+        "$bin_mkdir" --parents "$output_root/$project" # not using the readlink here
 
-    # check if recipe exists
-    if [[ ! -f "$arg_subproj_makefile" ]]; then
-        "$bin_echo" "Subproject '$project' does not contain a Makefile on '$recipe_name'."
-        exit 1
-    fi
+        # check if recipe exists
+        if [[ ! -f "$arg_subproj_makefile" ]]; then
+            "$bin_echo" "Subproject '$project' does not contain a Makefile on '$recipe_name'."
+            exit 1
+        fi
 
-    # perform action on this subproject
-    "$bin_make" --silent --file="$rules/pull/subproject-action-header.mk" "$arg_action" _ARG_SUBPROJ_ROOT="$arg_subproj_root" _ARG_ARTIFACT_ROOT="$arg_artifact_root" _ARG_SUBPROJ_MAKEFILE="$arg_subproj_makefile" _ARG_ARGUMENTS_MAKEFILE="$arg_arguments_makefile"
-    if [[ $? != 0 ]]; then
-        "$bin_echo" "Subproject '$project' failed action '$arg_action' on '$recipe_name'."
-        exit 1
-    fi
-done
+        # perform action on this subproject
+        "$bin_make" --silent --file="$rules/pull/subproject-action-header.mk" "$arg_action" _ARG_SUBPROJ_ROOT="$arg_subproj_root" _ARG_ARTIFACT_ROOT="$arg_artifact_root" _ARG_SUBPROJ_MAKEFILE="$arg_subproj_makefile" _ARG_ARGUMENTS_MAKEFILE="$arg_arguments_makefile"
+        if [[ $? != 0 ]]; then
+            "$bin_echo" "Subproject '$project' failed action '$arg_action' on '$recipe_name'."
+            exit 1
+        fi
+    done
+}
+
+
+
+# main procedure
+__parse_arguments
+__build_targets
