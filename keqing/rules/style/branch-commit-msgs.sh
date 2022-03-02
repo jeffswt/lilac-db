@@ -9,6 +9,9 @@ path_rules=$6
 
 # read commits diff from given branch to master
 commits=$("$bin_git" cherry -v master "$branch")
+if [[ $? != 0 ]]; then
+    exit 1
+fi
 
 # mark an error here if something fails
 lintok="true"
