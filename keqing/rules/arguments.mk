@@ -9,6 +9,7 @@ BIN_FIND        = find
 BIN_GIT         = git
 BIN_MAKE        = make
 BIN_MKDIR       = mkdir
+BIN_READLINK    = readlink
 BIN_TAR         = tar
 BIN_TEE         = tee
 BIN_TOUCH       = touch

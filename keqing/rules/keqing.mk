@@ -5,16 +5,18 @@
 # External arguments
 ARG_COMMIT_MSG  = $(_ARG_COMMIT_MSG)
 
-# binary declarations
-include $(RULES)/arguments.mk
-
 # Resource definitions
 KEQING          = ./keqing
 ARTIFACTS       = $(KEQING)/.artifacts
 RULES           = $(KEQING)/rules
 
+# binary declarations
+include $(RULES)/arguments.mk
+
 # Action references
-ACTION_DEPENDS  = $(BIN_MAKE) --makefile="$(RULES)/keqing.mk" --silent
+ACTION_DEPENDS  = "$(BIN_MAKE)" --makefile="$(RULES)/keqing.mk" --silent
+                  include $(RULES)/pull/subproject-action.mk
+ACTION_SUBPROJ  = $(__PULL__SUBPROJECT_ACTION)
 
 # Index of target rules
 include $(RULES)/git/archive.mk
