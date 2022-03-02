@@ -33,11 +33,11 @@ include $(RULES)/git/workspace.mk
 
 include $(RULES)/install/environ.mk
 
+include $(RULES)/pull/pr-gate.mk
 include $(RULES)/pull/subproject-action.mk
 
 include $(RULES)/style/branch-commit-msgs.mk
 include $(RULES)/style/branch-name.mk
 include $(RULES)/style/lint.mk
-include $(RULES)/style/rustfmt.mk
 
 include $(RULES)/test/unit.mk
