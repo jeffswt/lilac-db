@@ -13,12 +13,16 @@ RULES           = $(KEQING)/rules
 # binary declarations
 include $(RULES)/arguments.mk
 
+# depend on this to be phony targets
+include $(RULES)/always-execute.mk
+
 # Action references
 ACTION_DEPENDS  = "$(BIN_MAKE)" --makefile="$(RULES)/keqing.mk" --silent
-                  include $(RULES)/pull/subproject-action.mk
 ACTION_SUBPROJ  = $(__PULL__SUBPROJECT_ACTION)
 
 # Index of target rules
+include $(RULES)/fix/style.mk
+
 include $(RULES)/git/archive.mk
 include $(RULES)/git/branch.mk
 include $(RULES)/git/checkout.mk
@@ -28,6 +32,8 @@ include $(RULES)/git/staged-all.mk
 include $(RULES)/git/workspace.mk
 
 include $(RULES)/install/environ.mk
+
+include $(RULES)/pull/subproject-action.mk
 
 include $(RULES)/style/branch-commit-msgs.mk
 include $(RULES)/style/branch-name.mk
