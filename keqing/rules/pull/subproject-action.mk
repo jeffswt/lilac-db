@@ -15,6 +15,7 @@
 # following actions:
 #
 #   * fix/style: automatically fix style issues.
+#     (This normally shouldn't be run on commits or branches.)
 #   * build/release: initiate a full build targeting release.
 #   * test/unit: validate codebase quality.
 #   * style/lint: check for style errors.
@@ -22,7 +23,7 @@
 # This (sub-)makefile contains a shortcut for other make rules to use the
 # script easier, usage as:
 #
-#     $(ACTION_SUBPROJ) [action] [target] [location]
+#     @$(ACTION_SUBPROJ) [action] [target] [location]
 #
 # Whereas:
 #
