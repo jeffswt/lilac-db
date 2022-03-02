@@ -1,25 +1,20 @@
 # external arguments
 action_depends=${1}
 artifacts=${2}
-bin_basename=${3}
-bin_cargo=${4}
-bin_cat=${5}
-bin_cp=${6}
-bin_echo=${7}
-bin_find=${8}
-bin_git=${9}
-bin_make=${10}
-bin_mkdir=${11}
-bin_readlink=${12}
-bin_rm=${13}
-bin_rustup=${14}
-bin_tee=${15}
-bin_touch=${16}
-rules=${17}
+bin_cat=${3}
+bin_cp=${4}
+bin_echo=${5}
+bin_git=${6}
+bin_make=${7}
+bin_mkdir=${8}
+bin_readlink=${9}
+bin_rm=${10}
+bin_touch=${11}
+rules=${12}
 
-arg_action=${18} # the performed action, also '.artifacts/[BUILD/RELEASE]/workspace/project/...'
-arg_option=${19} # workspace / commit / branch
-arg_param=${20}  # commit hash / branch name
+arg_action=${13} # the performed action, also '.artifacts/[BUILD/RELEASE]/workspace/project/...'
+arg_option=${14} # workspace / commit / branch
+arg_param=${15}  # commit hash / branch name
 
 # some parameters set by argument parser
 repo_root="."        # root of target directory (containing subprojects)
