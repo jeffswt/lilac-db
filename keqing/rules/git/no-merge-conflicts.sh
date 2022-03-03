@@ -22,8 +22,9 @@ if [[ $? != 0 && $abort_merge != *"MERGE_HEAD missing"* ]]; then
 fi
 
 # check if the branches are safe to merge
-"$bin_git" merge master --no-ff --no-commit
+merge_error=$("$bin_git" merge master --no-ff --no-commit 2>&1)
 if [[ $? != 0 ]]; then
+    "$bin_echo" "$merge_error"
     "$bin_echo" "                                                                    "
     "$bin_echo" "    +---------------------------------------------------------------"
     "$bin_echo" "    |  [!] Branch '$branch' has conflicts with 'master'.            "
