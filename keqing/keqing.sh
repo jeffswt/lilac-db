@@ -1,3 +1,4 @@
+#!/bin/bash
 # The 'human' interface for Keqing.
 
 # switch cwd to repo root
@@ -52,48 +53,48 @@ if [[ "$1 $2" == "help " ]]; then
     cat "./keqing/README.md"
 
 # release related
-elif [[ "$1 $2 $3" == "build release " ]]; then
+elif [[ "$1 $2;$3" == "build release;" ]]; then
     eval $keqing "$artifacts/build/release/workspace"
-elif [[ "$1 $2 $3 $4" == "build release on commit" ]]; then
+elif [[ "$1 $2 $3 $4 ... ;$6" == "build release on commit ... ;" ]]; then
     __resolve_commit "$5"
     eval $keqing "$artifacts/build/release/commit/$commit"
-elif [[ "$1 $2 $3 $4" == "build release on branch" ]]; then
+elif [[ "$1 $2 $3 $4 ... ;$6" == "build release on branch ... ;" ]]; then
     __resolve_branch "$5"
     eval $keqing "$artifacts/build/release/branch/$branch"
 
 # autofix
-elif [[ "$1 $2 $3" == "fix styles " ]]; then
+elif [[ "$1 $2;$3" == "fix styles;" ]]; then
     eval $keqing "$artifacts/fix/style/workspace"
 
 # repository actions
-elif [[ "$1" == "checkout" ]]; then
+elif [[ "$1 ... ;$3" == "checkout ... ;" ]]; then
     __resolve_branch "$2"
     eval $keqing "$artifacts/git/checkout/$branch"
-elif [[ "$1" == "commit" ]]; then
+elif [[ "$1 ... ;$3" == "commit ... ;" ]]; then
     eval $keqing "$artifacts/git/commit" _ARG_COMMIT_MSG="$2"
-elif [[ "$1 $2 $3 $4" == "check merge conflicts " ]]; then
+elif [[ "$1 $2 $3;$4" == "check merge conflicts;" ]]; then
     branch=$(git branch --show-current)
     eval $keqing "$artifacts/git/no-merge-conflicts/$branch"
 
 # misc actions
-elif [[ "$1 $2 $3" == "setup environment " ]]; then
+elif [[ "$1 $2;$3" == "setup environment;" ]]; then
     eval $keqing "$artifacts/install/environ"
-elif [[ "$1 $2" == "clean " ]]; then
+elif [[ "$1;$2" == "clean;" ]]; then
     eval $keqing clean
 
 # pull request related
-elif [[ "$1 $2 $4 $5" == "merge branch with message" ]]; then
+elif [[ "$1 $2 ... $4 $5 ... ;$7" == "merge branch ... with message ... ;" ]]; then
     __resolve_branch "$3"
     eval $keqing "$artifacts/pull/merge/$branch" _ARG_COMMIT_MSG="$6"
-elif [[ "$1 $2 $3 $4" == "run pr gate " ]]; then
+elif [[ "$1 $2 $3;$4" == "run pr gate;" ]]; then
     branch=$(git branch --show-current)
     eval $keqing "$artifacts/pull/pr-gate/$branch"
 
 # styles
-elif [[ "$1 $2 $3 $4" == "check commit messages " ]]; then
+elif [[ "$1 $2 $3;$4" == "check commit messages;" ]]; then
     branch=$(git branch --show-current)
     eval $keqing "$artifacts/style/branch-commit-msgs/$branch"
-elif [[ "$1 $2 $3" == "check styles " ]]; then
+elif [[ "$1 $2;$3" == "check styles;" ]]; then
     branch=$(git branch --show-current)
     eval $keqing "$artifacts/style/lint/branch/$branch"
 
