@@ -5,7 +5,7 @@ $(ARTIFACTS)/pull/merge/%:
 
 	@"$(BIN_ECHO)" "Switching to 'master' branch for merge..."
 	@$(ACTION_DEPENDS) "$(ARTIFACTS)/git/checkout/master"
-	@"$(BIN_GIT)" merge --no-ff --commit --log -m "$(ARG_COMMIT_MSG)" "$*"
+	@"$(BIN_GIT)" merge --no-ff --commit -m "$(ARG_COMMIT_MSG)" "$*"
 
 	@"$(BIN_ECHO)" "                                                        "
 	@"$(BIN_ECHO)" "+-------------------------------------------------------"
