@@ -72,6 +72,8 @@ elif [[ "$1 $2;$3" == "fix styles;" ]]; then
     eval $keqing "$artifacts/fix/style/workspace"
 
 # repository actions
+elif [[ "$1 $2 ... ;$4" == "create branch ... ;" ]]; then
+    eval $keqing "$artifacts/git/branch/$3"
 elif [[ "$1 ... ;$3" == "checkout ... ;" ]]; then
     __resolve_branch "$2"
     eval $keqing "$artifacts/git/checkout/$branch"
