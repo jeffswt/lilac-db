@@ -117,6 +117,16 @@ elif [[ "$1 $2 $3 $4 ... ;$6" == "check styles on branch ... ;" ]]; then
     __resolve_branch "$5"
     eval $keqing "$artifacts/style/lint/branch/$branch"
 
+# tests
+elif [[ "$1 $2 $3;$4" == "run unit tests;" ]]; then
+    eval $keqing "$artifacts/test/unit/workspace"
+elif [[ "$1 $2 $3 $4 $5 ... ;$7" == "run unit tests on commit ... ;" ]]; then
+    __resolve_commit "$6"
+    eval $keqing "$artifacts/test/unit/commit/$commit"
+elif [[ "$1 $2 $3 $4 $5 ... ;$7" == "run unit tests on branch ... ;" ]]; then
+    __resolve_branch "$6"
+    eval $keqing "$artifacts/test/unit/branch/$branch"
+
 # invalid arguments
 else
     echo "fatal: invalid arguments (use 'help' to see instructions)"
