@@ -82,9 +82,6 @@ elif [[ "$1 ... ;$3" == "commit ... ;" ]]; then
 elif [[ "$1 $2 $3;$4" == "check merge conflicts;" ]]; then
     __show_current_branch
     eval $keqing "$artifacts/git/no-merge-conflicts/$branch"
-elif [[ "$1 $2 $3 $4 $5 ... ;$7" == "check merge conflicts on branch ... ;" ]]; then
-    __resolve_branch "$6"
-    eval $keqing "$artifacts/git/no-merge-conflicts/$branch"
 
 # misc actions
 elif [[ "$1 $2;$3" == "setup environment;" ]]; then
@@ -93,14 +90,11 @@ elif [[ "$1;$2" == "clean;" ]]; then
     eval $keqing clean
 
 # pull request related
-elif [[ "$1 $2 ... $4 $5 ... ;$7" == "merge branch ... with message ... ;" ]]; then
-    __resolve_branch "$3"
-    eval $keqing "$artifacts/pull/merge/$branch" _ARG_COMMIT_MSG="$6"
+elif [[ "$1 $2 $3 ... ;$5" == "merge with message ... ;" ]]; then
+    __show_current_branch
+    eval $keqing "$artifacts/pull/merge/$branch" _ARG_COMMIT_MSG="$4"
 elif [[ "$1 $2 $3;$4" == "run pr gate;" ]]; then
     __show_current_branch
-    eval $keqing "$artifacts/pull/pr-gate/$branch"
-elif [[ "$1 $2 $3 $4 $5 ... ;$7" == "run pr gate on branch ... ;" ]]; then
-    __resolve_branch "$6"
     eval $keqing "$artifacts/pull/pr-gate/$branch"
 
 # styles
