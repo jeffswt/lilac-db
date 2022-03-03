@@ -25,10 +25,12 @@ for commit in $commits; do
     commit_msg=$("$bin_git" log "$commit_hash" -1 --pretty=format:"%B")
     # validate conventional commit style
     "$bin_python3" "$path_rules/style/commit-msg.py" --lint "$commit_msg"
-    # exit on error
+    # mark error flag on error
     if [ $? -ne 0 ]; then
         lintok="false"
         "$bin_echo" "Commit '$commit_hash' on branch '$branch' is badly styled."
+    else # or just print a notice
+        "$bin_echo" "${commit_hash:0:8}: $commit_msg [OK]"
     fi
 done
 
