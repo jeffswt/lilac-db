@@ -26,7 +26,7 @@ lazy_flag_filename=".action_success" # mark action complete
 
 # resolve target branch & commit, target repository root
 # extract VCS snapshot, get recipe name
-__parse_arguments() {
+function __parse_arguments() {
     if [[ $arg_option == "workspace" ]]; then
         repo_root="."
         output_root="$artifacts/$arg_action/workspace"
@@ -65,7 +65,7 @@ __parse_arguments() {
 
 # checks if the original artifacts are already up-to-date (0) or not (1)
 # targets should not be rebuilt if they are up-to-date
-__original_artifacts_need_rebuild() {
+function __original_artifacts_need_rebuild() {
     if [[ $arg_option == "workspace" ]]; then
         return 1
     elif [[ $arg_option == "commit" || $arg_option == "branch" ]]; then
@@ -78,7 +78,7 @@ __original_artifacts_need_rebuild() {
 }
 
 # execute action on subprojects in given order
-__build_targets() {
+function __build_targets() {
     IFS=$'\n'
     for project in $("$bin_cat" "$rules/pull/subproject-action-order.txt"); do
         # skip comments
@@ -114,7 +114,7 @@ __build_targets() {
 }
 
 # validate if the cloned artifacts are up-to-date (0) or not (1 or else)
-__cloned_artifacts_need_rebuild() {
+function __cloned_artifacts_need_rebuild() {
     if [[ $arg_option == "workspace" || $arg_option == "commit" ]]; then
         return 0
     elif [[ $arg_option == "branch" ]]; then
@@ -131,7 +131,7 @@ __cloned_artifacts_need_rebuild() {
 }
 
 # clone output artifacts to the cloned artifacts' folder
-__clone_targets() {
+function __clone_targets() {
     if [[ $output_clone_root == "" ]]; then
         exit 128
     fi
@@ -157,7 +157,7 @@ __clone_targets() {
 
     # update lazy flag
     "$bin_rm" "$output_clone_root/$lazy_flag_filename"
-    "$bin_echo" "$commit" > "$output_clone_root/$lazy_flag_filename"
+    "$bin_echo" "$commit" >"$output_clone_root/$lazy_flag_filename"
 }
 
 # main procedure
