@@ -80,7 +80,7 @@ if [[ "$1 $2 $3" == "setup environment " ]]; then
 fi
 
 if [[ "$1 $2" == "clean " ]]; then
-    eval $keqing "$artifacts/clean"
+    eval $keqing clean
 fi
 
 if [[ "$1 $2 $4 $5" == "merge branch with message" ]]; then

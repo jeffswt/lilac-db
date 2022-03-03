@@ -10,4 +10,7 @@ test/unit:
 	"$(BIN_ECHO)" "Executing unit tests on Keqing..."
 
 style/lint:
-	"$(BIN_ECHO)" "Linting project..."
+	"$(BIN_ECHO)" "Linting subproject Keqing..."
+
+clean:
+	"$(BIN_ECHO)" "Cleaning temporary files on Keqing..."

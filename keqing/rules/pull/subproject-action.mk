@@ -19,6 +19,7 @@
 #   * build/release: initiate a full build targeting release.
 #   * test/unit: validate codebase quality.
 #   * style/lint: check for style errors.
+#   * clean: remove temporary build files
 #
 # This (sub-)makefile contains a shortcut for other make rules to use the
 # script easier, usage as:
