@@ -45,6 +45,11 @@ function __resolve_branch() {
     branch="$1"
 }
 
+# extracts current branch name
+function __show_current_branch() {
+    branch=$(git branch --show-current)
+}
+
 ###############################################################################
 # Arguments
 
@@ -73,7 +78,10 @@ elif [[ "$1 ... ;$3" == "checkout ... ;" ]]; then
 elif [[ "$1 ... ;$3" == "commit ... ;" ]]; then
     eval $keqing "$artifacts/git/commit" _ARG_COMMIT_MSG="$2"
 elif [[ "$1 $2 $3;$4" == "check merge conflicts;" ]]; then
-    branch=$(git branch --show-current)
+    __show_current_branch
+    eval $keqing "$artifacts/git/no-merge-conflicts/$branch"
+elif [[ "$1 $2 $3 $4 $5 ... ;$7" == "check merge conflicts on branch ... ;" ]]; then
+    __resolve_branch "$6"
     eval $keqing "$artifacts/git/no-merge-conflicts/$branch"
 
 # misc actions
@@ -87,15 +95,26 @@ elif [[ "$1 $2 ... $4 $5 ... ;$7" == "merge branch ... with message ... ;" ]]; t
     __resolve_branch "$3"
     eval $keqing "$artifacts/pull/merge/$branch" _ARG_COMMIT_MSG="$6"
 elif [[ "$1 $2 $3;$4" == "run pr gate;" ]]; then
-    branch=$(git branch --show-current)
+    __show_current_branch
+    eval $keqing "$artifacts/pull/pr-gate/$branch"
+elif [[ "$1 $2 $3 $4 $5 ... ;$7" == "run pr gate on branch ... ;" ]]; then
+    __resolve_branch "$6"
     eval $keqing "$artifacts/pull/pr-gate/$branch"
 
 # styles
 elif [[ "$1 $2 $3;$4" == "check commit messages;" ]]; then
-    branch=$(git branch --show-current)
+    __show_current_branch
+    eval $keqing "$artifacts/style/branch-commit-msgs/$branch"
+elif [[ "$1 $2 $3 $4 $5 ... ;$7" == "check commit messages on branch;" ]]; then
+    __resolve_branch "$6"
     eval $keqing "$artifacts/style/branch-commit-msgs/$branch"
 elif [[ "$1 $2;$3" == "check styles;" ]]; then
-    branch=$(git branch --show-current)
+    eval $keqing "$artifacts/style/lint/workspace"
+elif [[ "$1 $2 $3 $4 ... ;$6" == "check styles on commit ... ;" ]]; then
+    __resolve_commit "$5"
+    eval $keqing "$artifacts/style/lint/commit/$commit"
+elif [[ "$1 $2 $3 $4 ... ;$6" == "check styles on branch ... ;" ]]; then
+    __resolve_branch "$5"
     eval $keqing "$artifacts/style/lint/branch/$branch"
 
 # invalid arguments
