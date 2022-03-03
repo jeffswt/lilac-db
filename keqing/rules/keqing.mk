@@ -34,6 +34,7 @@ include $(RULES)/git/workspace.mk
 
 include $(RULES)/install/environ.mk
 
+include $(RULES)/pull/merge.mk
 include $(RULES)/pull/pr-gate.mk
 include $(RULES)/pull/subproject-action.mk
 

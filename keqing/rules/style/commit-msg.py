@@ -19,6 +19,7 @@ class CommitType(enum.Enum):
     build = "build"
     ci = "ci"
     chore = "chore"
+    merge = "merge"
     revert = "revert"
 
 
@@ -117,12 +118,21 @@ def main() -> None:
     """Console worker."""
     parser = argparse.ArgumentParser(description="Conventional Commit Linter")
     parser.add_argument("--lint", type=str, dest="lint", action="store", required=True)
+    parser.add_argument("--requires-type", type=str, dest="requires_type", action="store")
     args = parser.parse_args()
+
     # lint commit
     msg = args.lint
-    if not parse_commit(msg):
+    commit = parse_commit(msg)
+    if not commit:
         print(f"{repr(msg)} is not a conventional commit.")
         exit(1)
+    # type requirements
+    if args.requires_type:
+        the_type = args.requires_type
+        if commit.header.typ != CommitType(the_type):
+            print(f"{repr(msg)} must have type '{the_type}'.")
+            exit(1)
     # all ok
     return
 
