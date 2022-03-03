@@ -47,7 +47,12 @@ function __resolve_branch() {
 ###############################################################################
 # Arguments
 
-if [[ "$1 $2 $3" == "build release " ]]; then
+# help file
+if [[ "$1 $2" == "help " ]]; then
+    cat "./keqing/README.md"
+
+# release related
+elif [[ "$1 $2 $3" == "build release " ]]; then
     eval $keqing "$artifacts/build/release/workspace"
 elif [[ "$1 $2 $3 $4" == "build release on commit" ]]; then
     __resolve_commit "$5"
@@ -55,50 +60,45 @@ elif [[ "$1 $2 $3 $4" == "build release on commit" ]]; then
 elif [[ "$1 $2 $3 $4" == "build release on branch" ]]; then
     __resolve_branch "$5"
     eval $keqing "$artifacts/build/release/branch/$branch"
-fi
 
-if [[ "$1 $2 $3" == "fix styles " ]]; then
+# autofix
+elif [[ "$1 $2 $3" == "fix styles " ]]; then
     eval $keqing "$artifacts/fix/style/workspace"
-fi
 
-if [[ "$1" == "checkout" ]]; then
+# repository actions
+elif [[ "$1" == "checkout" ]]; then
     __resolve_branch "$2"
     eval $keqing "$artifacts/git/checkout/$branch"
-fi
-
-if [[ "$1" == "commit" ]]; then
+elif [[ "$1" == "commit" ]]; then
     eval $keqing "$artifacts/git/commit" _ARG_COMMIT_MSG="$2"
-fi
-
-if [[ "$1 $2 $3 $4" == "check merge conflicts " ]]; then
+elif [[ "$1 $2 $3 $4" == "check merge conflicts " ]]; then
     branch=$(git branch --show-current)
     eval $keqing "$artifacts/git/no-merge-conflicts/$branch"
-fi
 
-if [[ "$1 $2 $3" == "setup environment " ]]; then
+# misc actions
+elif [[ "$1 $2 $3" == "setup environment " ]]; then
     eval $keqing "$artifacts/install/environ"
-fi
-
-if [[ "$1 $2" == "clean " ]]; then
+elif [[ "$1 $2" == "clean " ]]; then
     eval $keqing clean
-fi
 
-if [[ "$1 $2 $4 $5" == "merge branch with message" ]]; then
+# pull request related
+elif [[ "$1 $2 $4 $5" == "merge branch with message" ]]; then
     __resolve_branch "$3"
     eval $keqing "$artifacts/pull/merge/$branch" _ARG_COMMIT_MSG="$6"
-fi
-
-if [[ "$1 $2 $3 $4" == "run pr gate " ]]; then
+elif [[ "$1 $2 $3 $4" == "run pr gate " ]]; then
     branch=$(git branch --show-current)
     eval $keqing "$artifacts/pull/pr-gate/$branch"
-fi
 
-if [[ "$1 $2 $3 $4" == "check commit messages " ]]; then
+# styles
+elif [[ "$1 $2 $3 $4" == "check commit messages " ]]; then
     branch=$(git branch --show-current)
     eval $keqing "$artifacts/style/branch-commit-msgs/$branch"
-fi
-
-if [[ "$1 $2 $3" == "check styles " ]]; then
+elif [[ "$1 $2 $3" == "check styles " ]]; then
     branch=$(git branch --show-current)
     eval $keqing "$artifacts/style/lint/branch/$branch"
+
+# invalid arguments
+else
+    echo "fatal: invalid arguments (use 'help' to see instructions)"
+    exit 128
 fi
