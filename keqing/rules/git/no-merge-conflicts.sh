@@ -8,17 +8,9 @@ rules=$5
 branch=$6
 
 # clean workspace and checkout
-eval $action_depends "$artifacts/git/staged-all"
-if [[ $? != 0 ]]; then
-    exit 1
-fi
-"$bin_git" checkout "$branch"
+eval $action_depends "$artifacts/git/checkout/$branch"
 if [[ $? != 0 ]]; then
     "$bin_echo" "Failed to checkout to branch '$branch'."
-    exit 1
-fi
-eval $action_depends "$artifacts/git/staged-all"
-if [[ $? != 0 ]]; then
     exit 1
 fi
 
