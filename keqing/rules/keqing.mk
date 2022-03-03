@@ -13,6 +13,7 @@ RULES           = $(KEQING)/rules
 # miscellany
 include $(RULES)/misc/always-execute.mk
 include $(RULES)/misc/arguments.mk
+include $(RULES)/misc/clean.mk
 
 # Action references
 ACTION_DEPENDS  = "$(BIN_MAKE)" --makefile="$(RULES)/keqing.mk" --silent
