@@ -3,12 +3,12 @@
 
 $(ARTIFACTS)/test/unit/workspace: $(ARTIFACTS)/always-execute
 	@$(ACTION_SUBPROJ) test/unit workspace
-	@"$(BIN_ECHO)" "All unit tests passed on current workspace."
+	@"$(BIN_ECHO)" "All tests passed on current workspace."
 
 $(ARTIFACTS)/test/unit/commit/%: $(ARTIFACTS)/always-execute
 	@$(ACTION_SUBPROJ) test/unit commit "$*"
-	@"$(BIN_ECHO)" "All unit tests passed on commit '$*'."
+	@"$(BIN_ECHO)" "All tests passed on commit '$*'."
 
 $(ARTIFACTS)/test/unit/branch/%: $(ARTIFACTS)/always-execute
 	@$(ACTION_SUBPROJ) test/unit branch "$*"
-	@"$(BIN_ECHO)" "All unit tests passed on branch '$*'."
+	@"$(BIN_ECHO)" "All tests passed on branch '$*'."

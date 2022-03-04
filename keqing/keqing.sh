@@ -162,15 +162,15 @@ elif [[ "$1 $2 $3 $4 ... ;$6" == "check styles on branch ... ;" ]]; then
     eval $keqing "$artifacts/style/lint/branch/$branch"
 
 # tests
-elif [[ "$1 $2 $3;$4" == "run unit tests;" ]]; then
+elif [[ "$1 $2;$3" == "run tests;" ]]; then
     __echo_current_head "Tests" workspace
     eval $keqing "$artifacts/test/unit/workspace"
-elif [[ "$1 $2 $3 $4 $5 ... ;$7" == "run unit tests on commit ... ;" ]]; then
-    __resolve_commit "$6"
+elif [[ "$1 $2 $3 $4 ... ;$6" == "run tests on commit ... ;" ]]; then
+    __resolve_commit "$5"
     __echo_current_head "Tests" commit
     eval $keqing "$artifacts/test/unit/commit/$commit"
-elif [[ "$1 $2 $3 $4 $5 ... ;$7" == "run unit tests on branch ... ;" ]]; then
-    __resolve_branch "$6"
+elif [[ "$1 $2 $3 $4 ... ;$6" == "run tests on branch ... ;" ]]; then
+    __resolve_branch "$5"
     __echo_current_head "Tests" branch
     eval $keqing "$artifacts/test/unit/branch/$branch"
 
