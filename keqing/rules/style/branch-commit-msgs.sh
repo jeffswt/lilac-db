@@ -8,9 +8,17 @@ branch=${5}
 path_rules=${6}
 
 # read commits diff from given branch to master
-commits=$("$bin_git" cherry -v master "$branch")
-if [[ $? != 0 ]]; then
-    exit 1
+if [[ $branch != "master" ]]; then
+    commits=$("$bin_git" cherry -v master "$branch")
+    if [[ $? != 0 ]]; then
+        exit 1
+    fi
+# master shows all commits
+elif [[ $branch == "master" ]]; then
+    commits=$("$bin_git" log --reverse --pretty=format:"+ %H %s" "$branch")
+    if [[ $? != 0 ]]; then
+        exit 1
+    fi
 fi
 
 # mark an error here if something fails
