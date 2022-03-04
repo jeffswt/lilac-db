@@ -119,7 +119,7 @@ elif [[ "$1 ... ;$3" == "checkout ... ;" ]]; then
     __resolve_branch "$2"
     eval $keqing "$artifacts/git/checkout/$branch"
 elif [[ "$1 ... ;$3" == "commit ... ;" ]]; then
-    eval $keqing "$artifacts/git/commit" _ARG_COMMIT_MSG="$2"
+    eval $keqing "$artifacts/git/commit" "_ARG_COMMIT_MSG=\"$2\""
 elif [[ "$1 $2 $3;$4" == "check merge conflicts;" ]]; then
     __show_current_branch
     eval $keqing "$artifacts/git/no-merge-conflicts/$branch"
@@ -134,7 +134,7 @@ elif [[ "$1;$2" == "clean;" ]]; then
 elif [[ "$1 $2 $3 ... ;$5" == "merge with message ... ;" ]]; then
     __show_current_branch
     __echo_current_head "Code check-in" branch
-    eval $keqing "$artifacts/pull/merge/$branch" _ARG_COMMIT_MSG="$4"
+    eval $keqing "$artifacts/pull/merge/$branch" "_ARG_COMMIT_MSG=\"$4\""
 elif [[ "$1 $2 $3;$4" == "run pr gate;" ]]; then
     __show_current_branch
     __echo_current_head "Code check-in validation" branch
