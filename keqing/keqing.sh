@@ -145,7 +145,7 @@ elif [[ "$1 $2 $3;$4" == "check commit messages;" ]]; then
     __show_current_branch
     __echo_current_head "Commit message style checks" branch
     eval $keqing "$artifacts/style/branch-commit-msgs/$branch"
-elif [[ "$1 $2 $3 $4 $5 ... ;$7" == "check commit messages on branch;" ]]; then
+elif [[ "$1 $2 $3 $4 $5 ... ;$7" == "check commit messages on branch ... ;" ]]; then
     __resolve_branch "$6"
     __echo_current_head "Commit message style checks" branch
     eval $keqing "$artifacts/style/branch-commit-msgs/$branch"

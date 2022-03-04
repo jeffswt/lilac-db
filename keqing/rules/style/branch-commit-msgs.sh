@@ -1,11 +1,11 @@
 # set parameters
-bin_echo=$1
-bin_git=$2
-bin_perl=$3
-bin_python3=$4
+bin_echo=${1}
+bin_git=${2}
+bin_perl=${3}
+bin_python3=${4}
 
-branch=$5
-path_rules=$6
+branch=${5}
+path_rules=${6}
 
 # read commits diff from given branch to master
 commits=$("$bin_git" cherry -v master "$branch")

@@ -1,6 +1,6 @@
 # external arguments
-bin_echo=$1
-bin_git=$2
+bin_echo=${1}
+bin_git=${2}
 
 if [ -n "$("$bin_git" status --porcelain)" ]; then
     cur_branch=$("$bin_git" branch --show-current)

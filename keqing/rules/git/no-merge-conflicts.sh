@@ -1,11 +1,11 @@
 # external arguments
-action_depends=$1
-artifacts=$2
-bin_echo=$3
-bin_git=$4
-rules=$5
+action_depends=${1}
+artifacts=${2}
+bin_echo=${3}
+bin_git=${4}
+rules=${5}
 
-branch=$6
+branch=${6}
 
 # clean workspace and checkout
 eval $action_depends "$artifacts/git/checkout/$branch"

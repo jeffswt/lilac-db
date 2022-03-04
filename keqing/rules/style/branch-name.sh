@@ -1,7 +1,7 @@
 # external arguments
-bin_echo=$1
+bin_echo=${1}
 
-branch=$2
+branch=${2}
 
 if [[ $branch =~ ^[0-9a-z]+(-[0-9a-z]+)*$ ]]; then
     exit 0
