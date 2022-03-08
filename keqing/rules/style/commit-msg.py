@@ -27,7 +27,8 @@ class CommitScope(enum.Enum):
     """Project scopes accepted by Keqing."""
 
     any = "*"
-    keqing = "keqing"
+    keqing = "keqing"  # Version Control Utility
+    kleestor_any = "kleestor/*"  # Storage engine
 
 
 @dataclasses.dataclass
