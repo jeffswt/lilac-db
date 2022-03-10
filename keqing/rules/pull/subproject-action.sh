@@ -91,6 +91,7 @@ function __build_targets() {
         arg_artifact_root=$("$bin_readlink" --canonicalize "$output_root/$project")
         arg_subproj_makefile=$("$bin_readlink" --canonicalize "$repo_root/$project/Makefile")
         arg_arguments_makefile=$("$bin_readlink" --canonicalize "$rules/misc/arguments.mk")
+        subproject_action_header=$("$bin_readlink" --canonicalize "$rules/pull/subproject-action-header.mk")
 
         # create directories
         "$bin_mkdir" --parents "$output_root/$project" # not using the readlink here
@@ -102,7 +103,10 @@ function __build_targets() {
         fi
 
         # perform action on this subproject
-        "$bin_make" --silent --file="$rules/pull/subproject-action-header.mk" "$arg_action" _ARG_SUBPROJ_ROOT="$arg_subproj_root" _ARG_ARTIFACT_ROOT="$arg_artifact_root" _ARG_SUBPROJ_MAKEFILE="$arg_subproj_makefile" _ARG_ARGUMENTS_MAKEFILE="$arg_arguments_makefile"
+        (
+            cd "$arg_subproj_root"
+            "$bin_make" --silent --file="$subproject_action_header" "$arg_action" _ARG_SUBPROJ_ROOT="$arg_subproj_root" _ARG_ARTIFACT_ROOT="$arg_artifact_root" _ARG_SUBPROJ_MAKEFILE="$arg_subproj_makefile" _ARG_ARGUMENTS_MAKEFILE="$arg_arguments_makefile"
+        )
         if [[ $? != 0 ]]; then
             "$bin_echo" "Subproject '$project' failed action '$arg_action' on '$recipe_name'."
             exit 1
