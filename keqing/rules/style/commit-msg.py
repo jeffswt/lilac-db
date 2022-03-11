@@ -29,6 +29,7 @@ class CommitScope(enum.Enum):
     any = "*"
     keqing = "keqing"  # Version Control Utility
     kleestor_any = "kleestor/*"  # Storage engine
+    kleestor_memtable = "kleestor/memtable"  # Memory-only part of storage engine
 
 
 @dataclasses.dataclass
