@@ -16,12 +16,19 @@ pub struct RBTree<K: Ord + Sized, V: Sized> {
 
 /// Access points for universal trait.
 impl<K: Ord + Sized, V: Sized> MemTable<K, V> for RBTree<K, V> {
-    fn get(&mut self, key: &K) -> Option<&V> {
-        None
+    fn get(&mut self, key: &K) -> Option<&mut V> {
+        unsafe {
+            let ptr = self.access(key);
+            if ptr == ptr::null_mut() {
+                return None;
+            }
+            let value = &mut (*ptr).value;
+            return Some(value);
+        }
     }
 
     fn insert(&mut self, key: K, value: V) -> Option<()> {
-        None
+        unsafe { self.insert_wrap(key, value) }
     }
 
     fn remove(&mut self, key: &K) -> Result<(), ()> {
@@ -45,13 +52,13 @@ impl<K: Ord + Sized, V: Sized> Node<K, V> {
     }
 
     /// Creates a new node returning its mutable pointer (unsafe).
-    ///
-    /// Color and references are not expected to be set on default.
     pub unsafe fn new(key: K, value: V) -> *mut Self {
         let layout = Self::layout();
         let ptr = alloc(layout) as *mut Self;
 
-        (*ptr).color = Color::Black;
+        // the newly inserted node is temporarily colored red so that all paths
+        // contain the same number of black nodes as before.
+        (*ptr).color = Color::Red;
         (*ptr).key = key;
         (*ptr).value = value;
         (*ptr).parent = ptr::null_mut();
@@ -77,6 +84,14 @@ enum Color {
 
 /// Implementations for fundamental tree algorithms.
 impl<K: Ord + Sized, V: Sized> RBTree<K, V> {
+    /// Creates new instance.
+    pub fn new() -> Self {
+        Self {
+            root: ptr::null_mut(),
+            length: 0,
+        }
+    }
+
     /// Access node with key in red-black tree.
     unsafe fn access(&self, key: &K) -> *mut Node<K, V> {
         if self.length <= 0 {
@@ -136,6 +151,34 @@ impl<K: Ord + Sized, V: Sized> RBTree<K, V> {
     /// Insert key-value pair into tree. `Some` is returned with when an
     /// existing value is overwritten. `None` is returned if no such value
     /// existed with `key`.
+    unsafe fn insert_wrap(&mut self, key: K, value: V) -> Option<()> {
+        let mut p = self.root; // the to-be parent of `n`
+        while p != ptr::null_mut() {
+            if key == (*p).key {
+                // changing value and just leaving
+                (*p).value = value;
+                return Some(());
+            } else if key < (*p).key {
+                if (*p).child[0] == ptr::null_mut() {
+                    self.insert_cases(Node::new(key, value), p, 0);
+                    return None;
+                }
+                p = (*p).child[0];
+            } else {
+                if (*p).child[1] == ptr::null_mut() {
+                    self.insert_cases(Node::new(key, value), p, 1);
+                    return None;
+                }
+                p = (*p).child[1];
+            }
+        }
+        // should insert to root
+        self.insert_cases(Node::new(key, value), ptr::null_mut(), 0);
+        None
+    }
+
+    /// Underlying implementation of insert.
+    #[allow(unused_variables)]
     unsafe fn insert_cases(
         &mut self,
         mut n: *mut Node<K, V>,
