@@ -94,7 +94,7 @@ impl<K: Ord + Sized, V: Sized> RBTree<K, V> {
 
     /// Access node with key in red-black tree.
     unsafe fn access(&self, key: &K) -> *mut Node<K, V> {
-        if self.length <= 0 {
+        if self.root == ptr::null_mut() {
             return ptr::null_mut();
         }
         // start from root

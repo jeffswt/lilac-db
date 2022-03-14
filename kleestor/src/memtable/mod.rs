@@ -1,3 +1,4 @@
+pub mod btree_builtin;
 pub mod rbtree;
 
 /// Basic MemTable implementation interface.
