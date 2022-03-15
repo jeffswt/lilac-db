@@ -1,6 +1,7 @@
-pub mod splay;
+pub mod btree;
 pub mod btree_builtin;
 pub mod rbtree;
+pub mod splay;
 
 /// Basic MemTable implementation interface.
 pub trait MemTable<K: Ord + Sized, V: Sized> {
