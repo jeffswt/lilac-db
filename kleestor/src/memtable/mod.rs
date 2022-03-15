@@ -1,3 +1,4 @@
+pub mod splay;
 pub mod btree_builtin;
 pub mod rbtree;
 

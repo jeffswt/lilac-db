@@ -1,6 +1,7 @@
 use crate::memtable::MemTable;
 use std::collections::BTreeMap;
 
+/// Wrapper of built-in B-Tree map implementation.
 pub struct BTreeBuiltin<K: Ord + Sized, V: Sized> {
     proxy: BTreeMap<K, V>,
 }
