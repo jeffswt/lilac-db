@@ -2,24 +2,24 @@ use crate::memtable::MemTable;
 use std::alloc::{alloc, dealloc, Layout};
 use std::ptr;
 
-/// A B-tree of key-value pairs, where each node may contain up to $M - 1$
-/// keys and up to $M$ children (an M-order B-Tree).
+/// A B-tree of key-value pairs, where each node may contain up to $Order - 1$
+/// key-value pairs and up to $Order$ children.
 ///
-/// The parameter `M` should be odd. All terms referred to in this
+/// The parameter `Order` should be odd. All terms referred to in this
 /// implementation respect the 1998 Knuth definition.
-pub struct BTree<K: Ord, V, const M: usize> {
-    root: *mut Node<K, V, M>,
+pub struct BTree<K: Ord, V, const Order: usize> {
+    root: *mut Node<K, V, Order>,
 }
 
-struct Node<K: Ord, V, const M: usize> {
-    keys: [Option<Box<K>>; M],
-    values: [Option<Box<V>>; M],
-    children: [*mut Node<K, V, M>; M],
+struct Node<K: Ord, V, const Order: usize> {
+    keys: [Option<Box<K>>; Order],
+    values: [Option<Box<V>>; Order],
+    children: [*mut Node<K, V, Order>; Order],
     leaf: bool,
-    parent: *mut Node<K, V, M>,
+    parent: *mut Node<K, V, Order>,
 }
 
-impl<K: Ord, V, const M: usize> Node<K, V, M> {
+impl<K: Ord, V, const Order: usize> Node<K, V, Order> {
     pub fn layout() -> Layout {
         Layout::new::<Self>()
     }
@@ -31,7 +31,7 @@ impl<K: Ord, V, const M: usize> Node<K, V, M> {
 
         // the newly inserted node is temporarily colored red so that all paths
         // contain the same number of black nodes as before.
-        for i in 0..M {
+        for i in 0..Order {
             (*ptr).keys[i] = None;
             (*ptr).values[i] = None;
             (*ptr).children[i] = ptr::null_mut();
@@ -44,7 +44,7 @@ impl<K: Ord, V, const M: usize> Node<K, V, M> {
 
     /// Releases pointer.
     pub unsafe fn drop(ptr: *mut Self) -> () {
-        for i in 0..M {
+        for i in 0..Order {
             match &(*ptr).keys[i] {
                 Some(k) => drop(k),
                 None => (),
@@ -58,13 +58,13 @@ impl<K: Ord, V, const M: usize> Node<K, V, M> {
     }
 }
 
-impl<K: Ord, V, const M: usize> BTree<K, V, M> {
+impl<K: Ord, V, const Order: usize> BTree<K, V, Order> {
     unsafe fn access(&mut self, key: &K) -> Option<&mut V> {
         let mut p = self.root;
         while p != ptr::null_mut() {
             // iterate all keys (separators)
             let mut i = 0;
-            while i < M - 1 {
+            while i < Order - 1 {
                 match (*p).keys[i].as_ref() {
                     None => {
                         break;
