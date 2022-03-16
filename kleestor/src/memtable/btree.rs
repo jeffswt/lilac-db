@@ -3,19 +3,19 @@ use std::alloc::{alloc, dealloc, Layout};
 use std::mem;
 use std::ptr;
 
-/// A B-tree of key-value pairs, where each node may contain up to $Order - 1$
-/// key-value pairs and up to $Order$ children.
+/// A B-tree of key-value pairs, where each node may contain up to $ORDER - 1$
+/// key-value pairs and up to $ORDER$ children.
 ///
-/// The parameter `Order` should be odd. All terms referred to in this
+/// The parameter `ORDER` should be odd. All terms referred to in this
 /// implementation respect the 1998 Knuth definition.
 ///
-/// You should avoid making `Order` larger than 65535 (2^16 - 1). Doing this
+/// You should avoid making `ORDER` larger than 65535 (2^16 - 1). Doing this
 /// also means a higher cache miss rate.
-pub struct BTree<K: Ord + Eq, V, const Order: usize> {
-    root: *mut Node<K, V, Order>,
+pub struct BTree<K: Ord + Eq, V, const ORDER: usize> {
+    root: *mut Node<K, V, ORDER>,
 }
 
-impl<K: Ord + Eq, V, const Order: usize> MemTable<K, V> for BTree<K, V, Order> {
+impl<K: Ord + Eq, V, const ORDER: usize> MemTable<K, V> for BTree<K, V, ORDER> {
     fn get(&mut self, key: &K) -> Option<&mut V> {
         unsafe { self.access(&key) }
     }
@@ -29,25 +29,25 @@ impl<K: Ord + Eq, V, const Order: usize> MemTable<K, V> for BTree<K, V, Order> {
     }
 }
 
-struct Node<K: Ord + Eq, V, const Order: usize> {
+struct Node<K: Ord + Eq, V, const ORDER: usize> {
     keys_cnt: u16,
     children_cnt: u16,
-    keys: [Option<Box<K>>; Order],
-    children: [*mut Node<K, V, Order>; Order],
-    values: [Option<Box<V>>; Order],
+    keys: [Option<Box<K>>; ORDER],
+    children: [*mut Node<K, V, ORDER>; ORDER],
+    values: [Option<Box<V>>; ORDER],
 }
 
-enum InsertResult<K: Ord + Eq, V, const Order: usize> {
+enum InsertResult<K: Ord + Eq, V, const ORDER: usize> {
     Split {
         key: K,
         value: V,
-        lchild: *mut Node<K, V, Order>,
-        rchild: *mut Node<K, V, Order>,
+        lchild: *mut Node<K, V, ORDER>,
+        rchild: *mut Node<K, V, ORDER>,
     },
     Kept,
 }
 
-impl<K: Ord + Eq, V, const Order: usize> Node<K, V, Order> {
+impl<K: Ord + Eq, V, const ORDER: usize> Node<K, V, ORDER> {
     pub fn layout() -> Layout {
         Layout::new::<Self>()
     }
@@ -61,7 +61,7 @@ impl<K: Ord + Eq, V, const Order: usize> Node<K, V, Order> {
         // contain the same number of black nodes as before.
         (*ptr).keys_cnt = 0;
         (*ptr).children_cnt = 0;
-        for i in 0..Order {
+        for i in 0..ORDER {
             (*ptr).keys[i] = None;
             (*ptr).values[i] = None;
             (*ptr).children[i] = ptr::null_mut();
@@ -72,7 +72,7 @@ impl<K: Ord + Eq, V, const Order: usize> Node<K, V, Order> {
 
     /// Releases pointer.
     pub unsafe fn drop(ptr: *mut Self) -> () {
-        for i in 0..Order {
+        for i in 0..ORDER {
             match &(*ptr).keys[i] {
                 Some(k) => drop(k),
                 None => (),
@@ -86,7 +86,7 @@ impl<K: Ord + Eq, V, const Order: usize> Node<K, V, Order> {
     }
 }
 
-impl<K: Ord + Eq, V, const Order: usize> BTree<K, V, Order> {
+impl<K: Ord + Eq, V, const ORDER: usize> BTree<K, V, ORDER> {
     pub fn new() -> Self {
         unsafe { Self { root: Node::new() } }
     }
@@ -96,7 +96,7 @@ impl<K: Ord + Eq, V, const Order: usize> BTree<K, V, Order> {
         while p != ptr::null_mut() {
             // iterate all keys (separators)
             let mut i = 0;
-            while i < Order - 1 {
+            while i < ORDER - 1 {
                 match (*p).keys[i].as_ref() {
                     None => {
                         break;
@@ -146,7 +146,7 @@ impl<K: Ord + Eq, V, const Order: usize> BTree<K, V, Order> {
     /// child being split.
     unsafe fn insert_r(
         &mut self,
-        p: *mut Node<K, V, Order>,
+        p: *mut Node<K, V, ORDER>,
         mut key: K,
         mut value: V,
     ) -> Option<(K, V)> {
@@ -182,7 +182,7 @@ impl<K: Ord + Eq, V, const Order: usize> BTree<K, V, Order> {
         }
 
         // enough space, just insert and don't split
-        if (*p).keys_cnt + 1 < Order as u16 {
+        if (*p).keys_cnt + 1 < ORDER as u16 {
             // shift stuff right
             for i in (idx..(*p).keys_cnt as usize).rev() {
                 (*p).keys[i + 1] = mem::take(&mut (*p).keys[i]);
