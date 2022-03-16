@@ -167,7 +167,12 @@ impl<K: Ord + Eq, V, const ORDER: usize> BTree<K, V, ORDER> {
     unsafe fn insert_wrap(&mut self, k: K, v: V) -> Option<()> {
         match self.insert_r(self.root, k, v) {
             InsertResult::Kept => (),
-            InsertResult::Split { key, value, lchild, rchild } => {
+            InsertResult::Split {
+                key,
+                value,
+                lchild,
+                rchild,
+            } => {
                 let p = Node::new();
                 (*p).keys[0] = Some(Box::from(key));
                 (*p).values[0] = Some(Box::from(value));
@@ -217,7 +222,12 @@ impl<K: Ord + Eq, V, const ORDER: usize> BTree<K, V, ORDER> {
                     // the lower-layer does not require a split
                     return InsertResult::Kept;
                 }
-                InsertResult::Split { key: k, value: v, lchild: lc, rchild: rc } => {
+                InsertResult::Split {
+                    key: k,
+                    value: v,
+                    lchild: lc,
+                    rchild: rc,
+                } => {
                     // we still need to insert the newly split median
                     key = k;
                     value = v;
@@ -245,6 +255,103 @@ impl<K: Ord + Eq, V, const ORDER: usize> BTree<K, V, ORDER> {
         }
 
         // this node would be split into 3 (2 extra)
-        InsertResult::Kept
+        let lc: *mut Node<K, V, ORDER> = Node::new();
+        let rc: *mut Node<K, V, ORDER> = Node::new();
+        let median_key: Option<K>;
+        let median_value: Option<V>;
+
+        if idx < ORDER / 2 {
+            // insert new node at left child
+            //    0 X 1   [2]   3 4 5
+            //   0 L R 2       3 4 5 6
+            for i in 0..idx {
+                (*lc).keys[i] = mem::take(&mut (*p).keys[i]);
+                (*lc).values[i] = mem::take(&mut (*p).values[i]);
+                (*lc).children[i] = (*p).children[i];
+            }
+
+            (*lc).keys[idx] = Some(Box::from(key));
+            (*lc).values[idx] = Some(Box::from(value));
+            (*lc).children[idx] = lchild;
+            (*lc).children[idx + 1] = rchild;
+
+            for i in (idx + 1)..(ORDER / 2) {
+                (*lc).keys[i] = mem::take(&mut (*p).keys[i]);
+                (*lc).values[i] = mem::take(&mut (*p).values[i]);
+                (*lc).children[i + 1] = (*p).children[i];
+            }
+
+            median_key = Some(*mem::take(&mut (*p).keys[ORDER / 2 - 1]).unwrap());
+            median_value = Some(*mem::take(&mut (*p).values[ORDER / 2 - 1]).unwrap());
+
+            for i in 0..(ORDER / 2) {
+                (*rc).keys[i] = mem::take(&mut (*p).keys[i + ORDER / 2]);
+                (*rc).values[i] = mem::take(&mut (*p).values[i + ORDER / 2]);
+                (*rc).children[i] = (*p).children[i + ORDER / 2];
+            }
+            (*rc).children[ORDER / 2] = (*p).children[ORDER - 1];
+        } else if idx == ORDER / 2 {
+            // insert new node in between
+            //    0 1 2   [X]   3 4 5
+            //   0 1 2 L       R 4 5 6
+
+            for i in 0..(ORDER / 2) {
+                (*lc).keys[i] = mem::take(&mut (*p).keys[i]);
+                (*lc).values[i] = mem::take(&mut (*p).values[i]);
+                (*lc).children[i] = (*p).children[i];
+            }
+            (*lc).children[ORDER / 2] = lchild;
+
+            median_key = Some(key);
+            median_value = Some(value);
+
+            (*rc).children[0] = rchild;
+            for i in 0..(ORDER / 2) {
+                (*rc).keys[i] = mem::take(&mut (*p).keys[i + ORDER / 2]);
+                (*rc).values[i] = mem::take(&mut (*p).values[i + ORDER / 2]);
+                (*rc).children[i + 1] = (*p).children[i + 1 + ORDER / 2];
+            }
+        } else {
+            // insert at right child
+            //    0 1 2   [3]   4 X 5
+            //   0 1 2 3       4 L R 6
+
+            for i in 0..(ORDER / 2) {
+                (*lc).keys[i] = mem::take(&mut (*p).keys[i]);
+                (*lc).values[i] = mem::take(&mut (*p).values[i]);
+                (*lc).children[i] = (*p).children[i];
+            }
+            (*lc).children[ORDER / 2] = (*p).children[ORDER / 2];
+
+            median_key = Some(*mem::take(&mut (*p).keys[ORDER / 2]).unwrap());
+            median_value = Some(*mem::take(&mut (*p).values[ORDER / 2]).unwrap());
+
+            for i in (ORDER / 2)..idx {
+                (*rc).keys[i - ORDER / 2] = mem::take(&mut (*p).keys[i]);
+                (*rc).values[i - ORDER / 2] = mem::take(&mut (*p).values[i]);
+                (*rc).children[i - ORDER / 2] = (*p).children[i];
+            }
+
+            (*rc).keys[idx] = Some(Box::from(key));
+            (*rc).values[idx] = Some(Box::from(value));
+            (*rc).children[idx] = lchild;
+            (*rc).children[idx + 1] = rchild;
+
+            for i in (idx + 1)..ORDER {
+                (*rc).keys[i - 1 - ORDER / 2] = mem::take(&mut (*p).keys[i - 1]);
+                (*rc).values[i - 1 - ORDER / 2] = mem::take(&mut (*p).values[i - 1]);
+                (*rc).children[i - ORDER / 2] = (*p).children[i];
+            }
+        }
+
+        (*lc).keys_cnt = (ORDER / 2) as u16;
+        (*rc).keys_cnt = (ORDER / 2) as u16;
+
+        InsertResult::Split {
+            key: median_key.unwrap(),
+            value: median_value.unwrap(),
+            lchild: lc,
+            rchild: rc,
+        }
     }
 }
