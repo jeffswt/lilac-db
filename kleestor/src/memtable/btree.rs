@@ -15,12 +15,36 @@ pub struct BTree<K: Ord + Eq, V, const Order: usize> {
     root: *mut Node<K, V, Order>,
 }
 
+impl<K: Ord + Eq, V, const Order: usize> MemTable<K, V> for BTree<K, V, Order> {
+    fn get(&mut self, key: &K) -> Option<&mut V> {
+        unsafe { self.access(&key) }
+    }
+
+    fn insert(&mut self, key: K, value: V) -> Option<()> {
+        unsafe { self.insert_wrap(key, value) }
+    }
+
+    fn remove(&mut self, key: &K) -> Result<(), ()> {
+        Err(())
+    }
+}
+
 struct Node<K: Ord + Eq, V, const Order: usize> {
     keys_cnt: u16,
     children_cnt: u16,
     keys: [Option<Box<K>>; Order],
     children: [*mut Node<K, V, Order>; Order],
     values: [Option<Box<V>>; Order],
+}
+
+enum InsertResult<K: Ord + Eq, V, const Order: usize> {
+    Split {
+        key: K,
+        value: V,
+        lchild: *mut Node<K, V, Order>,
+        rchild: *mut Node<K, V, Order>,
+    },
+    Kept,
 }
 
 impl<K: Ord + Eq, V, const Order: usize> Node<K, V, Order> {
@@ -63,6 +87,10 @@ impl<K: Ord + Eq, V, const Order: usize> Node<K, V, Order> {
 }
 
 impl<K: Ord + Eq, V, const Order: usize> BTree<K, V, Order> {
+    pub fn new() -> Self {
+        unsafe { Self { root: Node::new() } }
+    }
+
     unsafe fn access(&mut self, key: &K) -> Option<&mut V> {
         let mut p = self.root;
         while p != ptr::null_mut() {
@@ -95,13 +123,33 @@ impl<K: Ord + Eq, V, const Order: usize> BTree<K, V, Order> {
         None
     }
 
+    /// Insert key-value pair.
+    unsafe fn insert_wrap(&mut self, key: K, value: V) -> Option<()> {
+        match self.insert_r(self.root, key, value) {
+            None => (),
+            Some((k, v)) => {
+                let p = Node::new();
+                (*p).keys[0] = Some(Box::from(k));
+                (*p).values[0] = Some(Box::from(v));
+                (*p).keys_cnt = 1;
+                self.root = p;
+            }
+        }
+        None
+    }
+
     /// Insert recursively a key-value pair into a given node. Nodes are split
     /// on the way while backtracing.
     ///
     /// The return value is an option indicating if an additional key-value
     /// pair had been inserted to the parent node as a result of the direct
     /// child being split.
-    unsafe fn insert_r(&mut self, p: *mut Node<K, V, Order>, mut key: K, mut value: V) -> Option<(K, V)> {
+    unsafe fn insert_r(
+        &mut self,
+        p: *mut Node<K, V, Order>,
+        mut key: K,
+        mut value: V,
+    ) -> Option<(K, V)> {
         // p.key[idx - 1] <= key < p.key[idx]
         // inserting new child at p.child[idx]
         let mut idx: usize = 0;
