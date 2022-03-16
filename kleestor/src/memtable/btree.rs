@@ -31,7 +31,6 @@ impl<K: Ord + Eq, V, const ORDER: usize> MemTable<K, V> for BTree<K, V, ORDER> {
 
 struct Node<K: Ord + Eq, V, const ORDER: usize> {
     keys_cnt: u16,
-    children_cnt: u16,
     keys: [Option<Box<K>>; ORDER],
     children: [*mut Node<K, V, ORDER>; ORDER],
     values: [Option<Box<V>>; ORDER],
@@ -60,7 +59,6 @@ impl<K: Ord + Eq, V, const ORDER: usize> Node<K, V, ORDER> {
         // the newly inserted node is temporarily colored red so that all paths
         // contain the same number of black nodes as before.
         (*ptr).keys_cnt = 0;
-        (*ptr).children_cnt = 0;
         for i in 0..ORDER {
             (*ptr).keys[i] = None;
             (*ptr).values[i] = None;
@@ -88,9 +86,7 @@ impl<K: Ord + Eq, V, const ORDER: usize> Node<K, V, ORDER> {
 
 unsafe fn as_u64<P>(p: &Option<Box<P>>) -> String {
     match p {
-        None => {
-            String::from("--")
-        }
+        None => String::from("--"),
         Some(x) => {
             let p64 = *(x.as_ref() as *const P as *const u64);
             p64.to_string()
@@ -192,11 +188,11 @@ impl<K: Ord + Eq, V, const ORDER: usize> BTree<K, V, ORDER> {
     ) -> Option<(K, V)> {
         // p.key[idx - 1] <= key < p.key[idx]
         // inserting new child at p.child[idx]
+        let keys_cnt = (*p).keys_cnt;
         let mut idx: usize = 0;
-        while idx < (*p).keys_cnt as usize {
+        while idx < keys_cnt as usize {
             let k = (*p).keys[idx].as_ref().unwrap();
-            if key > **k {
-                idx += 1;
+            if key < **k {
                 break;
             } else if key == **k {
                 // replacing value does not trigger a split
@@ -222,9 +218,9 @@ impl<K: Ord + Eq, V, const ORDER: usize> BTree<K, V, ORDER> {
         }
 
         // enough space, just insert and don't split
-        if (*p).keys_cnt + 1 < ORDER as u16 {
+        if keys_cnt + 1 < ORDER as u16 {
             // shift stuff right
-            for i in (idx..(*p).keys_cnt as usize).rev() {
+            for i in (idx..keys_cnt as usize).rev() {
                 (*p).keys[i + 1] = mem::take(&mut (*p).keys[i]);
                 (*p).values[i + 1] = mem::take(&mut (*p).values[i]);
                 (*p).children[i + 1] = (*p).children[i];
@@ -233,6 +229,7 @@ impl<K: Ord + Eq, V, const ORDER: usize> BTree<K, V, ORDER> {
             (*p).keys[idx] = Some(Box::from(key));
             (*p).values[idx] = Some(Box::from(value));
             (*p).children[idx] = ptr::null_mut();
+            (*p).keys_cnt += 1;
             return None;
         }
 
