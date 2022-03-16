@@ -4,7 +4,7 @@ pub mod rbtree;
 pub mod splay;
 
 /// Basic MemTable implementation interface.
-pub trait MemTable<K: Ord + Sized, V: Sized> {
+pub trait MemTable<K: Ord + Eq, V> {
     /// Accesses `table[key] -> value`.
     fn get(&mut self, key: &K) -> Option<&mut V>;
 

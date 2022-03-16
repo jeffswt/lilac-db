@@ -2,11 +2,11 @@ use crate::memtable::MemTable;
 use std::collections::BTreeMap;
 
 /// Wrapper of built-in B-Tree map implementation.
-pub struct BTreeBuiltin<K: Ord + Sized, V: Sized> {
+pub struct BTreeBuiltin<K: Ord + Eq, V> {
     proxy: BTreeMap<K, V>,
 }
 
-impl<K: Ord + Sized, V: Sized> MemTable<K, V> for BTreeBuiltin<K, V> {
+impl<K: Ord + Eq, V> MemTable<K, V> for BTreeBuiltin<K, V> {
     fn get(&mut self, key: &K) -> Option<&mut V> {
         match self.proxy.get(key) {
             None => None,
@@ -31,7 +31,7 @@ impl<K: Ord + Sized, V: Sized> MemTable<K, V> for BTreeBuiltin<K, V> {
     }
 }
 
-impl<K: Ord + Sized, V: Sized> BTreeBuiltin<K, V> {
+impl<K: Ord + Eq, V> BTreeBuiltin<K, V> {
     pub fn new() -> Self {
         Self {
             proxy: BTreeMap::new(),

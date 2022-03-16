@@ -3,13 +3,13 @@ use std::alloc::{alloc, dealloc, Layout};
 use std::ptr;
 
 /// Splay tree.
-pub struct SplayTree<K: Ord + Sized, V: Sized> {
+pub struct SplayTree<K: Ord + Eq, V> {
     /// Pointer to tree root.
     root: *mut Node<K, V>,
 }
 
 /// Access points for universal trait.
-impl<K: Ord + Sized, V: Sized> MemTable<K, V> for SplayTree<K, V> {
+impl<K: Ord + Eq, V> MemTable<K, V> for SplayTree<K, V> {
     fn get(&mut self, key: &K) -> Option<&mut V> {
         unsafe {
             let ptr = self.access(key);
@@ -30,14 +30,14 @@ impl<K: Ord + Sized, V: Sized> MemTable<K, V> for SplayTree<K, V> {
     }
 }
 
-struct Node<K: Ord + Sized, V: Sized> {
+struct Node<K: Ord + Eq, V> {
     pub key: K,
     pub value: V,
     pub parent: *mut Node<K, V>,
     pub child: [*mut Node<K, V>; 2], // left: [0], right: [1]
 }
 
-impl<K: Ord + Sized, V: Sized> Node<K, V> {
+impl<K: Ord + Eq, V> Node<K, V> {
     /// Returns a constant layout of the node itself.
     pub fn layout() -> Layout {
         Layout::new::<Self>()
@@ -67,7 +67,7 @@ impl<K: Ord + Sized, V: Sized> Node<K, V> {
 }
 
 /// Implementations for fundamental tree algorithms.
-impl<K: Ord + Sized, V: Sized> SplayTree<K, V> {
+impl<K: Ord + Eq, V> SplayTree<K, V> {
     /// Creates new instance.
     pub fn new() -> Self {
         Self {

@@ -7,7 +7,7 @@ use std::ptr;
 ///
 /// It takes a parameter `K` as Key type and parameter `V` as Value type. The
 /// number of children per tree node is given by the parameter `M`.
-pub struct RBTree<K: Ord + Sized, V: Sized> {
+pub struct RBTree<K: Ord + Eq, V> {
     /// Pointer to tree root.
     root: *mut Node<K, V>,
     /// A total of `length` nodes are in this tree.
@@ -15,7 +15,7 @@ pub struct RBTree<K: Ord + Sized, V: Sized> {
 }
 
 /// Access points for universal trait.
-impl<K: Ord + Sized, V: Sized> MemTable<K, V> for RBTree<K, V> {
+impl<K: Ord + Eq, V> MemTable<K, V> for RBTree<K, V> {
     fn get(&mut self, key: &K) -> Option<&mut V> {
         unsafe {
             let ptr = self.access(key);
@@ -37,7 +37,7 @@ impl<K: Ord + Sized, V: Sized> MemTable<K, V> for RBTree<K, V> {
 }
 
 /// A red-black tree node.
-struct Node<K: Ord + Sized, V: Sized> {
+struct Node<K: Ord + Eq, V> {
     pub color: Color,
     pub key: K,
     pub value: V,
@@ -45,7 +45,7 @@ struct Node<K: Ord + Sized, V: Sized> {
     pub child: [*mut Node<K, V>; 2], // left: [0], right: [1]
 }
 
-impl<K: Ord + Sized, V: Sized> Node<K, V> {
+impl<K: Ord + Eq, V> Node<K, V> {
     /// Returns a constant layout of the node itself.
     pub fn layout() -> Layout {
         Layout::new::<Self>()
@@ -83,7 +83,7 @@ enum Color {
 }
 
 /// Implementations for fundamental tree algorithms.
-impl<K: Ord + Sized, V: Sized> RBTree<K, V> {
+impl<K: Ord + Eq, V> RBTree<K, V> {
     /// Creates new instance.
     pub fn new() -> Self {
         Self {
