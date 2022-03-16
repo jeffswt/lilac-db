@@ -86,9 +86,49 @@ impl<K: Ord + Eq, V, const ORDER: usize> Node<K, V, ORDER> {
     }
 }
 
+unsafe fn as_u64<P>(p: &Option<Box<P>>) -> String {
+    match p {
+        None => {
+            String::from("--")
+        }
+        Some(x) => {
+            let p64 = *(x.as_ref() as *const P as *const u64);
+            p64.to_string()
+        }
+    }
+}
+
 impl<K: Ord + Eq, V, const ORDER: usize> BTree<K, V, ORDER> {
     pub fn new() -> Self {
         unsafe { Self { root: Node::new() } }
+    }
+
+    pub fn debug(&mut self) -> () {
+        let p64 = self.root as usize as u64;
+        println!("Root {p64:x};");
+        unsafe {
+            self.debug_r(self.root);
+        }
+        println!("");
+    }
+
+    unsafe fn debug_r(&mut self, p: *mut Node<K, V, ORDER>) -> () {
+        let p64 = p as usize as u64;
+        let cc = (*p).keys_cnt as usize;
+        println!("    Node {p64:x}, keys={cc}");
+        for i in 0..=cc {
+            let k64 = as_u64(&(*p).keys[i]);
+            let v64 = as_u64(&(*p).values[i]);
+            let c64 = (*p).children[i] as usize as u64;
+            println!("      - [K{i}] {k64} [V{i}] {v64} [ch{i}] {c64:x}");
+        }
+
+        for i in 0..=cc {
+            let ch = (*p).children[i];
+            if ch != ptr::null_mut() {
+                self.debug_r(ch);
+            }
+        }
     }
 
     unsafe fn access(&mut self, key: &K) -> Option<&mut V> {
