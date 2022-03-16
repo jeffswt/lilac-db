@@ -96,6 +96,10 @@ unsafe fn as_u64<P>(p: &Option<Box<P>>) -> String {
 
 impl<K: Ord + Eq, V, const ORDER: usize> BTree<K, V, ORDER> {
     pub fn new() -> Self {
+        // not having this won't have a big impact
+        // but it'd better have one
+        assert!(ORDER % 2 == 1);
+
         unsafe { Self { root: Node::new() } }
     }
 
@@ -160,14 +164,16 @@ impl<K: Ord + Eq, V, const ORDER: usize> BTree<K, V, ORDER> {
     }
 
     /// Insert key-value pair.
-    unsafe fn insert_wrap(&mut self, key: K, value: V) -> Option<()> {
-        match self.insert_r(self.root, key, value) {
-            None => (),
-            Some((k, v)) => {
+    unsafe fn insert_wrap(&mut self, k: K, v: V) -> Option<()> {
+        match self.insert_r(self.root, k, v) {
+            InsertResult::Kept => (),
+            InsertResult::Split { key, value, lchild, rchild } => {
                 let p = Node::new();
-                (*p).keys[0] = Some(Box::from(k));
-                (*p).values[0] = Some(Box::from(v));
+                (*p).keys[0] = Some(Box::from(key));
+                (*p).values[0] = Some(Box::from(value));
                 (*p).keys_cnt = 1;
+                (*p).children[0] = lchild;
+                (*p).children[1] = rchild;
                 self.root = p;
             }
         }
@@ -185,7 +191,7 @@ impl<K: Ord + Eq, V, const ORDER: usize> BTree<K, V, ORDER> {
         p: *mut Node<K, V, ORDER>,
         mut key: K,
         mut value: V,
-    ) -> Option<(K, V)> {
+    ) -> InsertResult<K, V, ORDER> {
         // p.key[idx - 1] <= key < p.key[idx]
         // inserting new child at p.child[idx]
         let keys_cnt = (*p).keys_cnt;
@@ -197,22 +203,26 @@ impl<K: Ord + Eq, V, const ORDER: usize> BTree<K, V, ORDER> {
             } else if key == **k {
                 // replacing value does not trigger a split
                 (*p).values[idx] = Some(Box::from(value));
-                return None;
+                return InsertResult::Kept;
             }
             idx += 1;
         }
 
         // insert to key-key range or recursively find a leaf
+        let mut lchild: *mut Node<K, V, ORDER> = ptr::null_mut();
+        let mut rchild: *mut Node<K, V, ORDER> = ptr::null_mut();
         if (*p).children[idx] != ptr::null_mut() {
             match self.insert_r((*p).children[idx], key, value) {
-                None => {
+                InsertResult::Kept => {
                     // the lower-layer does not require a split
-                    return None;
+                    return InsertResult::Kept;
                 }
-                Some((k, v)) => {
+                InsertResult::Split { key: k, value: v, lchild: lc, rchild: rc } => {
                     // we still need to insert the newly split median
                     key = k;
                     value = v;
+                    lchild = lc;
+                    rchild = rc;
                 }
             }
         }
@@ -228,13 +238,13 @@ impl<K: Ord + Eq, V, const ORDER: usize> BTree<K, V, ORDER> {
             // insert leaf
             (*p).keys[idx] = Some(Box::from(key));
             (*p).values[idx] = Some(Box::from(value));
-            (*p).children[idx] = ptr::null_mut();
+            (*p).children[idx] = lchild;
+            (*p).children[idx + 1] = rchild;
             (*p).keys_cnt += 1;
-            return None;
+            return InsertResult::Kept;
         }
 
         // this node would be split into 3 (2 extra)
-        unimplemented!();
-        None
+        InsertResult::Kept
     }
 }
