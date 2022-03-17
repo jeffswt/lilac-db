@@ -140,11 +140,11 @@ impl<K: Ord + Eq, V, const ORDER: usize> BTree<K, V, ORDER> {
 
     unsafe fn access(&mut self, key: &K) -> Option<&mut V> {
         let mut p = self.root;
-        while p != ptr::null_mut() {
+        'recurse: while p != ptr::null_mut() {
             // iterate all keys (separators)
             let mut i = 0;
             while i < ORDER - 1 {
-                match (*p).keys[i].as_ref() {
+                match &(*p).keys[i] {
                     None => {
                         break;
                     }
@@ -154,7 +154,7 @@ impl<K: Ord + Eq, V, const ORDER: usize> BTree<K, V, ORDER> {
                         if key < sep {
                             // goto left-hand-side
                             p = (*p).children[i];
-                            continue;
+                            continue 'recurse;
                         } else if key == sep {
                             // bingo
                             let val_box = (*p).values[i].as_mut().unwrap();
@@ -164,7 +164,7 @@ impl<K: Ord + Eq, V, const ORDER: usize> BTree<K, V, ORDER> {
                 }
                 i += 1;
             }
-            // goto right-hand-side
+            // goto THE right-hand-side
             p = (*p).children[i];
         }
         None
