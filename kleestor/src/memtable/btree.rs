@@ -326,16 +326,17 @@ impl<K: Ord + Eq, V, const ORDER: usize> BTree<K, V, ORDER> {
             median_key = Some(*mem::take(&mut (*p).keys[ORDER / 2]).unwrap());
             median_value = Some(*mem::take(&mut (*p).values[ORDER / 2]).unwrap());
 
-            for i in (ORDER / 2)..idx {
-                (*rc).keys[i - ORDER / 2] = mem::take(&mut (*p).keys[i]);
-                (*rc).values[i - ORDER / 2] = mem::take(&mut (*p).values[i]);
-                (*rc).children[i - ORDER / 2] = (*p).children[i];
+            for i in (ORDER / 2 + 1)..idx {
+                println!("wtf {i}");
+                (*rc).keys[i - ORDER / 2 - 1] = mem::take(&mut (*p).keys[i]);
+                (*rc).values[i - ORDER / 2 - 1] = mem::take(&mut (*p).values[i]);
+                (*rc).children[i - ORDER / 2 - 1] = (*p).children[i];
             }
 
-            (*rc).keys[idx] = Some(Box::from(key));
-            (*rc).values[idx] = Some(Box::from(value));
-            (*rc).children[idx] = lchild;
-            (*rc).children[idx + 1] = rchild;
+            (*rc).keys[idx - ORDER / 2 - 1] = Some(Box::from(key));
+            (*rc).values[idx - ORDER / 2 - 1] = Some(Box::from(value));
+            (*rc).children[idx - ORDER / 2 - 1] = lchild;
+            (*rc).children[idx - ORDER / 2] = rchild;
 
             for i in (idx + 1)..ORDER {
                 (*rc).keys[i - 1 - ORDER / 2] = mem::take(&mut (*p).keys[i - 1]);
