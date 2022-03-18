@@ -31,9 +31,9 @@ impl<K: Ord + Eq, V, const ORDER: usize> MemTable<K, V> for BTree<K, V, ORDER> {
 
 struct Node<K: Ord + Eq, V, const ORDER: usize> {
     keys_cnt: u16,
-    keys: [Option<Box<K>>; ORDER],
+    keys: [*mut K; ORDER],
     children: [*mut Node<K, V, ORDER>; ORDER],
-    values: [Option<Box<V>>; ORDER],
+    values: [*mut V; ORDER],
 }
 
 /// Insert actions need to recursively return the (newly-created) key-value
@@ -43,8 +43,8 @@ struct Node<K: Ord + Eq, V, const ORDER: usize> {
 /// is due to that a split implicitly means `key` does not exist in the tree.
 enum InsertResult<K: Ord + Eq, V, const ORDER: usize> {
     Split {
-        key: K,
-        value: V,
+        key: *mut K,
+        value: *mut V,
         lchild: *mut Node<K, V, ORDER>,
         rchild: *mut Node<K, V, ORDER>,
     },
@@ -63,41 +63,30 @@ impl<K: Ord + Eq, V, const ORDER: usize> Node<K, V, ORDER> {
         let layout = Self::layout();
         let ptr = alloc(layout) as *mut Self;
 
-        // the newly inserted node is temporarily colored red so that all paths
-        // contain the same number of black nodes as before.
         (*ptr).keys_cnt = 0;
         for i in 0..ORDER {
-            (*ptr).keys[i] = None;
-            (*ptr).values[i] = None;
+            (*ptr).keys[i] = ptr::null_mut();
+            (*ptr).values[i] = ptr::null_mut();
             (*ptr).children[i] = ptr::null_mut();
         }
-
-        return ptr;
+        ptr
     }
 
     /// Releases pointer.
     pub unsafe fn drop(ptr: *mut Self) -> () {
         for i in 0..ORDER {
-            match &(*ptr).keys[i] {
-                Some(k) => drop(k),
-                None => (),
-            }
-            match &(*ptr).values[i] {
-                Some(v) => drop(v),
-                None => (),
-            }
+            free_from_heap((*ptr).keys[i]);
+            free_from_heap((*ptr).values[i]);
         }
         dealloc(ptr as *mut u8, Self::layout());
     }
 }
 
-unsafe fn as_u64<P>(p: &Option<Box<P>>) -> String {
-    match p {
-        None => String::from("--"),
-        Some(x) => {
-            let p64 = *(x.as_ref() as *const P as *const u64);
-            p64.to_string()
-        }
+unsafe fn as_u64<P>(p: *mut P) -> String {
+    if p == ptr::null_mut() {
+        String::from("--")
+    } else {
+        (*(p as *mut u64)).to_string()
     }
 }
 
@@ -124,8 +113,8 @@ impl<K: Ord + Eq, V, const ORDER: usize> BTree<K, V, ORDER> {
         let cc = (*p).keys_cnt as usize;
         println!("    Node {p64:x}, keys={cc}");
         for i in 0..=cc {
-            let k64 = as_u64(&(*p).keys[i]);
-            let v64 = as_u64(&(*p).values[i]);
+            let k64 = as_u64((*p).keys[i]);
+            let v64 = as_u64((*p).values[i]);
             let c64 = (*p).children[i] as usize as u64;
             println!("      - [K{i}] {k64} [V{i}] {v64} [ch{i}] {c64:x}");
         }
@@ -144,23 +133,18 @@ impl<K: Ord + Eq, V, const ORDER: usize> BTree<K, V, ORDER> {
             // iterate all keys (separators)
             let mut i = 0;
             while i < ORDER - 1 {
-                match &(*p).keys[i] {
-                    None => {
-                        break;
-                    }
-                    // compare between separator and key
-                    Some(sep_box) => {
-                        let sep = sep_box.as_ref();
-                        if key < sep {
-                            // goto left-hand-side
-                            p = (*p).children[i];
-                            continue 'recurse;
-                        } else if key == sep {
-                            // bingo
-                            let val_box = (*p).values[i].as_mut().unwrap();
-                            return Some(val_box);
-                        }
-                    }
+                if (*p).keys[i] == ptr::null_mut() {
+                    break;
+                }
+                // compare between separator and key
+                let sep = &*(*p).keys[i];
+                if key < sep {
+                    // goto left-hand-side
+                    p = (*p).children[i];
+                    continue 'recurse;
+                } else if key == sep {
+                    // bingo
+                    return Some(&mut *(*p).values[i]);
                 }
                 i += 1;
             }
@@ -172,9 +156,15 @@ impl<K: Ord + Eq, V, const ORDER: usize> BTree<K, V, ORDER> {
 
     /// Insert key-value pair.
     unsafe fn insert_wrap(&mut self, k: K, v: V) -> Option<()> {
+        let k = move_to_heap(k);
+        let v = move_to_heap(v);
+
         match self.insert_r(self.root, k, v) {
             InsertResult::Kept { replaced } => match replaced {
-                true => Some(()),
+                true => {
+                    free_from_heap(k); // is not used in structure
+                    Some(())
+                },
                 false => None,
             },
             InsertResult::Split {
@@ -184,8 +174,8 @@ impl<K: Ord + Eq, V, const ORDER: usize> BTree<K, V, ORDER> {
                 rchild,
             } => {
                 let p = Node::new();
-                (*p).keys[0] = Some(Box::from(key));
-                (*p).values[0] = Some(Box::from(value));
+                (*p).keys[0] = key;
+                (*p).values[0] = value;
                 (*p).keys_cnt = 1;
                 (*p).children[0] = lchild;
                 (*p).children[1] = rchild;
@@ -198,26 +188,27 @@ impl<K: Ord + Eq, V, const ORDER: usize> BTree<K, V, ORDER> {
     /// Insert recursively a key-value pair into a given node. Nodes are split
     /// on the way while backtracing.
     ///
-    /// The return value is an option indicating if an additional key-value
-    /// pair had been inserted to the parent node as a result of the direct
-    /// child being split.
+    /// The return value is a custom result indicating if an additional
+    /// key-value pair had been inserted to the parent node as a result of the
+    /// direct child being split.
     unsafe fn insert_r(
         &mut self,
         p: *mut Node<K, V, ORDER>,
-        mut key: K,
-        mut value: V,
+        mut key: *mut K,
+        mut value: *mut V,
     ) -> InsertResult<K, V, ORDER> {
         // p.key[idx - 1] <= key < p.key[idx]
         // inserting new child at p.child[idx]
         let keys_cnt = (*p).keys_cnt;
         let mut idx: usize = 0;
         while idx < keys_cnt as usize {
-            let k = (*p).keys[idx].as_ref().unwrap();
-            if key < **k {
+            let k = &*(*p).keys[idx];
+            if &*key < k {
                 break;
-            } else if key == **k {
+            } else if &*key == k {
                 // replacing value does not trigger a split
-                (*p).values[idx] = Some(Box::from(value));
+                free_from_heap((*p).values[idx]);
+                (*p).values[idx] = value;
                 return InsertResult::Kept { replaced: true };
             }
             idx += 1;
@@ -251,13 +242,13 @@ impl<K: Ord + Eq, V, const ORDER: usize> BTree<K, V, ORDER> {
         if keys_cnt + 1 < ORDER as u16 {
             // shift stuff right
             for i in (idx..keys_cnt as usize).rev() {
-                (*p).keys[i + 1] = mem::take(&mut (*p).keys[i]);
-                (*p).values[i + 1] = mem::take(&mut (*p).values[i]);
+                (*p).keys[i + 1] = (*p).keys[i];
+                (*p).values[i + 1] = (*p).values[i];
                 (*p).children[i + 1] = (*p).children[i];
             }
             // insert leaf
-            (*p).keys[idx] = Some(Box::from(key));
-            (*p).values[idx] = Some(Box::from(value));
+            (*p).keys[idx] = key;
+            (*p).values[idx] = value;
             (*p).children[idx] = lchild;
             (*p).children[idx + 1] = rchild;
             (*p).keys_cnt += 1;
@@ -267,36 +258,36 @@ impl<K: Ord + Eq, V, const ORDER: usize> BTree<K, V, ORDER> {
         // this node would be split into 3 (2 extra)
         let lc: *mut Node<K, V, ORDER> = Node::new();
         let rc: *mut Node<K, V, ORDER> = Node::new();
-        let median_key: Option<K>;
-        let median_value: Option<V>;
+        let median_key: *mut K;
+        let median_value: *mut V;
 
         if idx < ORDER / 2 {
             // insert new node at left child
             //    0 X 1   [2]   3 4 5
             //   0 L R 2       3 4 5 6
             for i in 0..idx {
-                (*lc).keys[i] = mem::take(&mut (*p).keys[i]);
-                (*lc).values[i] = mem::take(&mut (*p).values[i]);
+                (*lc).keys[i] = (*p).keys[i];
+                (*lc).values[i] = (*p).values[i];
                 (*lc).children[i] = (*p).children[i];
             }
 
-            (*lc).keys[idx] = Some(Box::from(key));
-            (*lc).values[idx] = Some(Box::from(value));
+            (*lc).keys[idx] = key;
+            (*lc).values[idx] = value;
             (*lc).children[idx] = lchild;
             (*lc).children[idx + 1] = rchild;
 
             for i in (idx + 1)..(ORDER / 2) {
-                (*lc).keys[i] = mem::take(&mut (*p).keys[i]);
-                (*lc).values[i] = mem::take(&mut (*p).values[i]);
+                (*lc).keys[i] = (*p).keys[i];
+                (*lc).values[i] = (*p).values[i];
                 (*lc).children[i + 1] = (*p).children[i];
             }
 
-            median_key = Some(*mem::take(&mut (*p).keys[ORDER / 2 - 1]).unwrap());
-            median_value = Some(*mem::take(&mut (*p).values[ORDER / 2 - 1]).unwrap());
+            median_key = (*p).keys[ORDER / 2 - 1];
+            median_value = (*p).values[ORDER / 2 - 1];
 
             for i in 0..(ORDER / 2) {
-                (*rc).keys[i] = mem::take(&mut (*p).keys[i + ORDER / 2]);
-                (*rc).values[i] = mem::take(&mut (*p).values[i + ORDER / 2]);
+                (*rc).keys[i] = (*p).keys[i + ORDER / 2];
+                (*rc).values[i] = (*p).values[i + ORDER / 2];
                 (*rc).children[i] = (*p).children[i + ORDER / 2];
             }
             (*rc).children[ORDER / 2] = (*p).children[ORDER - 1];
@@ -306,19 +297,19 @@ impl<K: Ord + Eq, V, const ORDER: usize> BTree<K, V, ORDER> {
             //   0 1 2 L       R 4 5 6
 
             for i in 0..(ORDER / 2) {
-                (*lc).keys[i] = mem::take(&mut (*p).keys[i]);
-                (*lc).values[i] = mem::take(&mut (*p).values[i]);
+                (*lc).keys[i] = (*p).keys[i];
+                (*lc).values[i] = (*p).values[i];
                 (*lc).children[i] = (*p).children[i];
             }
             (*lc).children[ORDER / 2] = lchild;
 
-            median_key = Some(key);
-            median_value = Some(value);
+            median_key = key;
+            median_value = value;
 
             (*rc).children[0] = rchild;
             for i in 0..(ORDER / 2) {
-                (*rc).keys[i] = mem::take(&mut (*p).keys[i + ORDER / 2]);
-                (*rc).values[i] = mem::take(&mut (*p).values[i + ORDER / 2]);
+                (*rc).keys[i] = (*p).keys[i + ORDER / 2];
+                (*rc).values[i] = (*p).values[i + ORDER / 2];
                 (*rc).children[i + 1] = (*p).children[i + 1 + ORDER / 2];
             }
         } else {
@@ -327,41 +318,53 @@ impl<K: Ord + Eq, V, const ORDER: usize> BTree<K, V, ORDER> {
             //   0 1 2 3       4 L R 6
 
             for i in 0..(ORDER / 2) {
-                (*lc).keys[i] = mem::take(&mut (*p).keys[i]);
-                (*lc).values[i] = mem::take(&mut (*p).values[i]);
+                (*lc).keys[i] = (*p).keys[i];
+                (*lc).values[i] = (*p).values[i];
                 (*lc).children[i] = (*p).children[i];
             }
             (*lc).children[ORDER / 2] = (*p).children[ORDER / 2];
 
-            median_key = Some(*mem::take(&mut (*p).keys[ORDER / 2]).unwrap());
-            median_value = Some(*mem::take(&mut (*p).values[ORDER / 2]).unwrap());
+            median_key = (*p).keys[ORDER / 2];
+            median_value = (*p).values[ORDER / 2];
 
             for i in (ORDER / 2 + 1)..idx {
-                (*rc).keys[i - ORDER / 2 - 1] = mem::take(&mut (*p).keys[i]);
-                (*rc).values[i - ORDER / 2 - 1] = mem::take(&mut (*p).values[i]);
+                (*rc).keys[i - ORDER / 2 - 1] = (*p).keys[i];
+                (*rc).values[i - ORDER / 2 - 1] = (*p).values[i];
                 (*rc).children[i - ORDER / 2 - 1] = (*p).children[i];
             }
 
-            (*rc).keys[idx - ORDER / 2 - 1] = Some(Box::from(key));
-            (*rc).values[idx - ORDER / 2 - 1] = Some(Box::from(value));
+            (*rc).keys[idx - ORDER / 2 - 1] = key;
+            (*rc).values[idx - ORDER / 2 - 1] = value;
             (*rc).children[idx - ORDER / 2 - 1] = lchild;
             (*rc).children[idx - ORDER / 2] = rchild;
 
             for i in (idx + 1)..ORDER {
-                (*rc).keys[i - 1 - ORDER / 2] = mem::take(&mut (*p).keys[i - 1]);
-                (*rc).values[i - 1 - ORDER / 2] = mem::take(&mut (*p).values[i - 1]);
+                (*rc).keys[i - 1 - ORDER / 2] = (*p).keys[i - 1];
+                (*rc).values[i - 1 - ORDER / 2] = (*p).values[i - 1];
                 (*rc).children[i - ORDER / 2] = (*p).children[i];
             }
         }
+
+        // TODO: `p` is nof freed
 
         (*lc).keys_cnt = (ORDER / 2) as u16;
         (*rc).keys_cnt = (ORDER / 2) as u16;
 
         InsertResult::Split {
-            key: median_key.unwrap(),
-            value: median_value.unwrap(),
+            key: median_key,
+            value: median_value,
             lchild: lc,
             rchild: rc,
         }
     }
+}
+
+unsafe fn free_from_heap<T>(p: *mut T) -> () {
+    if p != ptr::null_mut() {
+        let _item = Box::from_raw(p);
+    }
+}
+
+unsafe fn move_to_heap<T>(item: T) -> *mut T {
+    Box::into_raw(Box::from(item))
 }
