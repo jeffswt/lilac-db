@@ -26,7 +26,7 @@ impl<K: Ord + Eq, V> MemTable<K, V> for BTreeBuiltin<K, V> {
         Some(())
     }
 
-    fn remove(&mut self, key: &K) -> Result<(), ()> {
+    fn remove(&mut self, _key: &K) -> Result<(), ()> {
         Err(())
     }
 }

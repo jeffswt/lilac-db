@@ -25,7 +25,7 @@ impl<K: Ord + Eq, V> MemTable<K, V> for SplayTree<K, V> {
         unsafe { self.insert_wrap(key, value) }
     }
 
-    fn remove(&mut self, key: &K) -> Result<(), ()> {
+    fn remove(&mut self, _key: &K) -> Result<(), ()> {
         Err(())
     }
 }
@@ -58,6 +58,7 @@ impl<K: Ord + Eq, V> Node<K, V> {
     }
 
     /// Releases pointer.
+    #[allow(dead_code)]
     pub unsafe fn drop(ptr: *mut Self) -> () {
         drop(Box::from_raw(&mut (*ptr).key));
         drop(Box::from_raw(&mut (*ptr).value));

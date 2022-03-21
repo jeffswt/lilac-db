@@ -23,7 +23,7 @@ impl<K: Ord + Eq, V, const ORDER: usize> MemTable<K, V> for BTreeUnsafe<K, V, OR
         unsafe { self.insert_wrap(key, value) }
     }
 
-    fn remove(&mut self, key: &K) -> Result<(), ()> {
+    fn remove(&mut self, _key: &K) -> Result<(), ()> {
         Err(())
     }
 }
@@ -72,6 +72,7 @@ impl<K: Ord + Eq, V, const ORDER: usize> Node<K, V, ORDER> {
     }
 
     /// Releases pointer.
+    #[allow(dead_code)]
     pub unsafe fn drop(ptr: *mut Self) -> () {
         for i in 0..ORDER {
             free_from_heap((*ptr).keys[i]);
@@ -98,6 +99,7 @@ impl<K: Ord + Eq, V, const ORDER: usize> BTreeUnsafe<K, V, ORDER> {
         unsafe { Self { root: Node::new() } }
     }
 
+    #[allow(dead_code)]
     pub fn debug(&mut self) -> () {
         let p64 = self.root as usize as u64;
         println!("Root {p64:x};");
