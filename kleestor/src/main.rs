@@ -1,6 +1,6 @@
 mod memtable;
-use crate::memtable::btree::BTreeUnsafe;
 use crate::memtable::btree_builtin::BTreeBuiltin;
+use crate::memtable::btree_unsafe::BTreeUnsafe;
 use crate::memtable::rbtree::RBTree;
 use crate::memtable::splay::SplayTree;
 use crate::memtable::MemTable;
@@ -36,7 +36,8 @@ fn benchmark(mut map: Box<dyn MemTable<u64, u64>>) -> () {
         for _i in 0..loops {
             _counter = (_counter * 2 + 1) & 0x3fffffffffffffff;
             // map.as_mut().insert(loops * batch + _i, _counter);
-            map.as_mut().insert((_i * 921544879) % (loops * (batch + 1)), _counter);
+            map.as_mut()
+                .insert((_i * 921544879) % (loops * (batch + 1)), _counter);
         }
         let write_time = write_time.elapsed().as_nanos();
         let write_time = (write_time as f64) / 1000000000.0 - base_write_time;
