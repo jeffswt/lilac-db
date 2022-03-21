@@ -1,7 +1,8 @@
 mod memtable;
-use crate::memtable::splay::SplayTree;
+use crate::memtable::btree::BTreeUnsafe;
 use crate::memtable::btree_builtin::BTreeBuiltin;
 use crate::memtable::rbtree::RBTree;
+use crate::memtable::splay::SplayTree;
 use crate::memtable::MemTable;
 use std::time::Instant;
 
@@ -70,6 +71,30 @@ fn main() {
     benchmark(Box::from(SplayTree::new()));
     println!("=== Red-Black Tree ===");
     benchmark(Box::from(RBTree::new()));
-    println!("=== B-Tree ===");
+    println!("=== B-Tree (Builtin) ===");
     benchmark(Box::from(BTreeBuiltin::new()));
+    println!("=== B-Tree (Unsafe) @ 7 ===");
+    let mp: BTreeUnsafe<u64, u64, 7> = BTreeUnsafe::new();
+    benchmark(Box::from(mp));
+    println!("=== B-Tree (Unsafe) @ 9 ===");
+    let mp: BTreeUnsafe<u64, u64, 9> = BTreeUnsafe::new();
+    benchmark(Box::from(mp));
+    println!("=== B-Tree (Unsafe) @ 11 ===");
+    let mp: BTreeUnsafe<u64, u64, 11> = BTreeUnsafe::new();
+    benchmark(Box::from(mp));
+    println!("=== B-Tree (Unsafe) @ 13 ===");
+    let mp: BTreeUnsafe<u64, u64, 13> = BTreeUnsafe::new();
+    benchmark(Box::from(mp));
+    println!("=== B-Tree (Unsafe) @ 15 ===");
+    let mp: BTreeUnsafe<u64, u64, 15> = BTreeUnsafe::new();
+    benchmark(Box::from(mp));
+    println!("=== B-Tree (Unsafe) @ 17 ===");
+    let mp: BTreeUnsafe<u64, u64, 17> = BTreeUnsafe::new();
+    benchmark(Box::from(mp));
+    println!("=== B-Tree (Unsafe) @ 19 ===");
+    let mp: BTreeUnsafe<u64, u64, 19> = BTreeUnsafe::new();
+    benchmark(Box::from(mp));
+    println!("=== B-Tree (Unsafe) @ 21 ===");
+    let mp: BTreeUnsafe<u64, u64, 21> = BTreeUnsafe::new();
+    benchmark(Box::from(mp));
 }

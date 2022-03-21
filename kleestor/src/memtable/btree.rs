@@ -1,6 +1,5 @@
 use crate::memtable::MemTable;
 use std::alloc::{alloc, dealloc, Layout};
-use std::mem;
 use std::ptr;
 
 /// A B-tree of key-value pairs, where each node may contain up to $ORDER - 1$
@@ -11,11 +10,11 @@ use std::ptr;
 ///
 /// You should avoid making `ORDER` larger than 65535 (2^16 - 1). Doing this
 /// also means a higher cache miss rate.
-pub struct BTree<K: Ord + Eq, V, const ORDER: usize> {
+pub struct BTreeUnsafe<K: Ord + Eq, V, const ORDER: usize> {
     root: *mut Node<K, V, ORDER>,
 }
 
-impl<K: Ord + Eq, V, const ORDER: usize> MemTable<K, V> for BTree<K, V, ORDER> {
+impl<K: Ord + Eq, V, const ORDER: usize> MemTable<K, V> for BTreeUnsafe<K, V, ORDER> {
     fn get(&mut self, key: &K) -> Option<&mut V> {
         unsafe { self.access(&key) }
     }
@@ -90,7 +89,7 @@ unsafe fn as_u64<P>(p: *mut P) -> String {
     }
 }
 
-impl<K: Ord + Eq, V, const ORDER: usize> BTree<K, V, ORDER> {
+impl<K: Ord + Eq, V, const ORDER: usize> BTreeUnsafe<K, V, ORDER> {
     pub fn new() -> Self {
         // not having this won't have a big impact
         // but it'd better have one
