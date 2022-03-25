@@ -1,3 +1,4 @@
+pub mod btree;
 pub mod btree_builtin;
 pub mod btree_unsafe;
 pub mod rbtree;
