@@ -1,4 +1,11 @@
+#![allow(incomplete_features)]
+#![feature(generic_const_exprs)]
+#![feature(new_uninit)]
+#![feature(trait_alias)]
+
 mod memtable;
+use memtable::btree::BTreeImpl;
+
 use crate::memtable::btree_builtin::BTreeBuiltin;
 use crate::memtable::btree_unsafe::BTreeUnsafe;
 use crate::memtable::rbtree::RBTree;
@@ -22,9 +29,8 @@ fn benchmark(mut map: Box<dyn MemTable<u64, u64>>) -> () {
 
     // evaluate base read time
     let base_read_time = Instant::now();
-    let mut _counter: u64 = 0;
     for _ in 0..loops {
-        _counter = (_counter * 937 + 3299) % loops;
+        _counter = (_counter * 2 + 1) & 0x3fffffffffffffff;
     }
     let base_read_time = base_read_time.elapsed().as_nanos();
     let base_read_time = (base_read_time as f64) / 1000000000.0;
@@ -33,30 +39,28 @@ fn benchmark(mut map: Box<dyn MemTable<u64, u64>>) -> () {
     for batch in 0..batches {
         // evaluate write performance
         let write_time = Instant::now();
-        for _i in 0..loops {
+        for i in 0..loops {
             _counter = (_counter * 2 + 1) & 0x3fffffffffffffff;
-            // map.as_mut().insert(loops * batch + _i, _counter);
-            map.as_mut()
-                .insert((_i * 921544879) % (loops * (batch + 1)), _counter);
+            let key = (i * 921544879) % (loops * (batch + 1));
+            map.as_mut().insert(key, key * 2);
         }
         let write_time = write_time.elapsed().as_nanos();
         let write_time = (write_time as f64) / 1000000000.0 - base_write_time;
 
         // evaluate read performance
         let max_key = loops * (batch + 1);
-        let mut _key = 0;
-        let mut _counter = 1;
         let read_time = Instant::now();
-        for _i in 0..loops {
-            _key = (_key * 937 + 3299) % max_key;
-            let value = match map.as_mut().get(&_key) {
+        for i in 0..loops {
+            let key = (i * 921544879) % max_key;
+            let value = match map.as_mut().get(&key) {
                 Some(x) => *x,
                 None => 0,
             };
-            _counter = (_counter + value) % 3;
+            // assert!(value == key * 2);
+            _counter = (_counter * 2 + 1) & 0x3fffffffffffffff;
         }
         let read_time = read_time.elapsed().as_nanos();
-        let read_time = ((read_time + _counter as u128) as f64) / 1000000000.0 - base_read_time;
+        let read_time = ((read_time + (_counter % 2) as u128) as f64) / 1000000000.0 - base_read_time;
 
         // report results
         let write_tps = (loops as f64) / write_time;
@@ -97,5 +101,14 @@ fn main() {
     benchmark(Box::from(mp));
     println!("=== B-Tree (Unsafe) @ 21 ===");
     let mp: BTreeUnsafe<u64, u64, 21> = BTreeUnsafe::new();
+    benchmark(Box::from(mp));
+    println!("=== B-Tree @ 5 ===");
+    let mp: BTreeImpl<u64, u64, 5> = BTreeImpl::new();
+    benchmark(Box::from(mp));
+    println!("=== B-Tree @ 7 ===");
+    let mp: BTreeImpl<u64, u64, 7> = BTreeImpl::new();
+    benchmark(Box::from(mp));
+    println!("=== B-Tree @ 9 ===");
+    let mp: BTreeImpl<u64, u64, 9> = BTreeImpl::new();
     benchmark(Box::from(mp));
 }
