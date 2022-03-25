@@ -76,6 +76,21 @@ where
     }
 }
 
+impl<K: Ord + Eq, V, const N: usize> Drop for Node<K, V, N>
+where
+    [(); N * 2]: Sized,
+    [(); N * 2 + 1]: Sized,
+{
+    fn drop(&mut self) -> () {
+        unsafe {
+            for i in 0..(self.count as usize) {
+                ptr::drop_in_place(self.keys[i].as_mut_ptr());
+                ptr::drop_in_place(self.values[i].as_mut_ptr());
+            }
+        }
+    }
+}
+
 /// Insert actions need to recursively return the (newly-created) key-value
 /// pair if the node was split into half (across its median).
 ///
@@ -388,16 +403,17 @@ where
     /// Undefined behaviour might occur if this limit is broken.
     #[inline]
     unsafe fn slice_copy<T>(src: &mut [T], dest: &mut [T]) -> () {
-        assert!(src.len() == dest.len());
+        assert_eq!(src.len(), dest.len());
 
         ptr::copy_nonoverlapping(src.as_ptr(), dest.as_mut_ptr(), src.len());
     }
 }
 
 #[cfg(test)]
-mod test_btree_integrity {
+pub mod test_btree_integrity {
     use super::BTreeImpl;
     use crate::memtable::MemTable;
+    use std::collections::BTreeMap;
 
     fn expect_ok<const N: usize>(at: u64)
     where
@@ -417,7 +433,7 @@ mod test_btree_integrity {
                 Some(&mut x) => x,
                 None => 11,
             };
-            assert!(value == key * 233 + 2333);
+            assert_eq!(value, key * 233 + 2333);
         }
     }
 
@@ -438,5 +454,58 @@ mod test_btree_integrity {
         for i in 8..=14 {
             expect_ok::<7>(i);
         }
+    }
+
+    /// Memory leak testing utilities
+    #[derive(PartialOrd, Ord, PartialEq, Eq)]
+    struct DroppableI64 {
+        value: i64,
+        counter: *mut i64,
+    }
+
+    impl Drop for DroppableI64 {
+        fn drop(&mut self) -> () {
+            unsafe { *self.counter += self.value }
+            let v = self.value;
+            println!("dropping {v}");
+        }
+    }
+
+    impl DroppableI64 {
+        fn from(value: i64, counter_ref: *mut i64) -> Self {
+            Self {
+                value: value,
+                counter: counter_ref,
+            }
+        }
+    }
+
+    #[test]
+    pub fn no_memory_leak() {
+        // counter for drop references
+        let mut drop_counter = 0i64;
+        let ctr_ref = &mut drop_counter as *mut i64;
+
+        // ensure that the drop counter is working properly
+        {
+            let mut mp = BTreeMap::<u64, DroppableI64>::new();
+            mp.insert(10, DroppableI64::from(1, ctr_ref));
+            mp.insert(20, DroppableI64::from(3, ctr_ref));
+            mp.insert(30, DroppableI64::from(7, ctr_ref));
+            mp.insert(40, DroppableI64::from(15, ctr_ref));
+            mp.insert(50, DroppableI64::from(31, ctr_ref));
+        }
+        assert_eq!(drop_counter, 57);
+
+        // check validity on tree
+        {
+            let mut mp = BTreeImpl::<u64, DroppableI64, 2>::new();
+            mp.insert(10, DroppableI64::from(1000, ctr_ref));
+            mp.insert(20, DroppableI64::from(3000, ctr_ref));
+            mp.insert(30, DroppableI64::from(7000, ctr_ref));
+            mp.insert(40, DroppableI64::from(15000, ctr_ref));
+            mp.insert(50, DroppableI64::from(31000, ctr_ref));
+        }
+        assert_eq!(drop_counter, 57057);
     }
 }
