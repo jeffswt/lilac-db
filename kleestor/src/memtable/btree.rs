@@ -508,4 +508,21 @@ pub mod test_btree_integrity {
         }
         assert_eq!(drop_counter, 57057);
     }
+
+    #[test]
+    fn stress_test() {
+        // ensure it works on big data
+        let loops: u64 = 23333;
+        let mut mp = BTreeImpl::<u64, u64, 5>::new();
+        for key in 1..=loops {
+            mp.insert(key, key * 2 + 1);
+        }
+        for key in 1..=loops {
+            let value = match mp.get(&key) {
+                Some(&mut x) => x,
+                None => 0,
+            };
+            assert_eq!(value, key * 2 + 1);
+        }
+    }
 }
