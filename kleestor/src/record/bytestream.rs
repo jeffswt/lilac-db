@@ -7,17 +7,23 @@ pub struct ByteStream {
 }
 
 impl ByteStream {
+    pub fn new() -> Self {
+        Self { data: vec![] }
+    }
+
     pub fn from_vec(bytes: Vec<u8>) -> Self {
         Self { data: bytes }
     }
 
-    pub fn new() -> Self {
-        Self { data: vec![] }
+    pub fn from_slice(bytes: &[u8]) -> Self {
+        Self { data: Vec::from(bytes) }
     }
 }
 
 impl PartialEq for ByteStream {
     /// Compare strings against each other using SIMD.
+    ///
+    /// Priority is guaranteed over `partial_cmp`.
     fn eq(&self, other: &Self) -> bool {
         let n = self.data.len();
         let m = other.data.len();
