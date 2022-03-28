@@ -3,6 +3,9 @@ use std::mem;
 use std::mem::MaybeUninit;
 use std::ptr;
 
+/// 15-order B-Trees have the best performance.
+pub type BTree<K, V> = BTreeImpl<K, V, 7>;
+
 /// A B-tree with at most $2n$ key-value pairs per node and at most $2n + 1$
 /// children per node.
 ///
@@ -410,7 +413,7 @@ where
 }
 
 #[cfg(test)]
-pub mod test_btree_integrity {
+pub mod tests {
     use super::BTreeImpl;
     use crate::memtable::MemTable;
     use std::collections::BTreeMap;

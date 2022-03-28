@@ -54,7 +54,7 @@ fn benchmark(mut map: Box<dyn MemTable<u64, u64>>) -> () {
         let read_time = Instant::now();
         for i in 0..loops {
             let key = (i * 921544879) % max_key;
-            let value = match map.as_mut().get(&key) {
+            let _value = match map.as_mut().get(&key) {
                 Some(x) => *x,
                 None => 0,
             };
@@ -62,7 +62,8 @@ fn benchmark(mut map: Box<dyn MemTable<u64, u64>>) -> () {
             _counter = (_counter * 2 + 1) & 0x3fffffffffffffff;
         }
         let read_time = read_time.elapsed().as_nanos();
-        let read_time = ((read_time + (_counter % 2) as u128) as f64) / 1000000000.0 - base_read_time;
+        let read_time =
+            ((read_time + (_counter % 2) as u128) as f64) / 1000000000.0 - base_read_time;
 
         // report results
         let write_tps = (loops as f64) / write_time;
