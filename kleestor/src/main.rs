@@ -1,9 +1,11 @@
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
+#![feature(portable_simd)]
 #![feature(new_uninit)]
 #![feature(trait_alias)]
 
 mod memtable;
+mod record;
 use memtable::btree::BTreeImpl;
 
 use crate::memtable::btree_builtin::BTreeBuiltin;
