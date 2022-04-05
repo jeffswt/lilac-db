@@ -37,6 +37,7 @@ impl DataPoint {
 /// Facade of getting all results.
 pub struct BenchmarkManager {
     results: Vec<BenchmarkResult>,
+    path: String,
 }
 
 /// Execute all benchmarks and export to file.
@@ -45,11 +46,15 @@ pub struct BenchmarkManager {
 #[allow(dead_code)]
 impl BenchmarkManager {
     pub fn run(path: &str) -> () {
-        Self { results: vec![] }.execute(path)
+        Self {
+            results: vec![],
+            path: String::from(path),
+        }
+        .execute()
     }
 
     /// This function contains a list of benchmark items to run.
-    fn execute(&mut self, path: &str) -> () {
+    fn execute(&mut self) -> () {
         self.add(nstree::btreebuiltin_rand_rw());
         self.add(nstree::btreebuiltin_seq_rw());
         self.add(nstree::btreeimpl_rand_rw::<3>());
@@ -74,8 +79,6 @@ impl BenchmarkManager {
         self.add(nstree::btreeunsafe_seq_rw::<7>());
         self.add(nstree::splay_rand_rw());
         self.add(nstree::splay_seq_rw());
-
-        self.save(path).unwrap();
     }
 
     /// Add records to the result.
@@ -86,14 +89,16 @@ impl BenchmarkManager {
             println!("'{title}' : {len} entries");
             self.results.push(result);
         }
+        // save results on-the-go
+        self.save().unwrap();
     }
 
     /// Save results to file.
-    fn save(&mut self, path: &str) -> Result<()> {
+    fn save(&mut self) -> Result<()> {
         let obj = JsonValue::Array(self.results.iter().map(|result| result.to_json()).collect());
         let doc = obj.pretty(2);
         // write stuff
-        let mut file = File::create(path)?;
+        let mut file = File::create(&self.path)?;
         file.write(&doc.as_bytes())?;
         Ok(())
     }

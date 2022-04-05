@@ -22,8 +22,9 @@ fn run(
     test_mode: TestMode,
 ) -> Vec<BenchmarkResult> {
     // each datapoint will contain `scale` transactions
-    let scale = 20000_i64;
-    let iterations = 500_i64;
+    let scale = 50000_i64;
+    let iterations = 100_i64;
+    let magic = 921544879_i64; // prime
 
     // baseline time consumption
     let baseline_loop = Instant::now();
@@ -50,7 +51,7 @@ fn run(
         let loop_time = Instant::now();
         for i in (iteration - 1) * scale..iteration * scale {
             let key = match test_mode {
-                TestMode::Random => (i * 921544879) % upper_bound,
+                TestMode::Random => (i * magic) % upper_bound,
                 TestMode::Sequential => i,
             };
             let value = key * 2 + 1;
@@ -59,26 +60,26 @@ fn run(
         let loop_time = loop_time.elapsed().as_nanos() - baseline_loop;
         write_result.data.push(DataPoint {
             x: (iteration * scale) as f64,
-            y: (loop_time as f64) / 1.0e9,
+            y: scale as f64 / ((loop_time as f64) / 1.0e9),
         });
 
         // evaluate read speed
         let loop_time = Instant::now();
         for i in (iteration - 1) * scale..iteration * scale {
             let key = match test_mode {
-                TestMode::Random => (i * 921544879) % upper_bound,
+                TestMode::Random => (i * magic) % upper_bound,
                 TestMode::Sequential => i,
             };
-            let value = match map.as_mut().get(&key) {
+            let _value = match map.as_mut().get(&key) {
                 Some(&mut x) => x,
                 None => -1,
             };
-            // assert!(value == key * 2 + 1);
+            // assert!(_value == key * 2 + 1);
         }
         let loop_time = loop_time.elapsed().as_nanos() - baseline_loop;
         read_result.data.push(DataPoint {
             x: (iteration * scale) as f64,
-            y: (loop_time as f64) / 1.0e9,
+            y: scale as f64 / ((loop_time as f64) / 1.0e9),
         });
     }
 
