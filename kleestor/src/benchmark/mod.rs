@@ -1,8 +1,9 @@
+mod bloomf;
+mod nstree;
+
 use json::{object, JsonValue};
 use std::fs::File;
 use std::io::{Result, Write};
-
-mod nstree;
 
 /// Result of one benchmark run.
 pub struct BenchmarkResult {
@@ -79,6 +80,8 @@ impl BenchmarkManager {
         self.add(nstree::btreeunsafe_seq_rw::<7>());
         self.add(nstree::splay_rand_rw());
         self.add(nstree::splay_seq_rw());
+
+        self.add(bloomf::siphash_rp());
     }
 
     /// Add records to the result.
