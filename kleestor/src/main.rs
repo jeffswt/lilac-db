@@ -5,6 +5,7 @@
 #![feature(trait_alias)]
 
 mod benchmark;
+mod bloom;
 mod memtable;
 mod record;
 

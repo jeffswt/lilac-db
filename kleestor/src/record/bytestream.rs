@@ -18,6 +18,10 @@ impl ByteStream {
     pub fn from_slice(bytes: &[u8]) -> Self {
         Self { data: Vec::from(bytes) }
     }
+
+    pub fn as_ref(&self) -> &[u8] {
+        self.data.as_ref()
+    }
 }
 
 impl PartialEq for ByteStream {

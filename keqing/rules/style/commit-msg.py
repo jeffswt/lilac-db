@@ -30,6 +30,7 @@ class CommitScope(enum.Enum):
     keqing = "keqing"  # Version Control Utility
     kleestor = "kleestor"  # Storage engine
     kleestor_memtable = "memtable"  # Memory-only part of storage engine
+    kleestor_bloomfilter = "kbloomf"  # Bloom filter for storage engine
 
 
 @dataclasses.dataclass
