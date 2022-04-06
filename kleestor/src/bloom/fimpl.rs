@@ -5,30 +5,28 @@ use super::HashStrategy;
 /// Common implementation for bloom filters on different hash sizes and hash
 /// functions.
 ///
-/// Parameters hold that M be the actual number of bloom filter bits, and K
+/// Parameters hold that 2^ML be the actual number of bloom filter bits, and K
 /// be the number of slots hashed per entry.
-///
-/// M is required to be a power of 2 while being larger than 8.
-struct BloomFilterImpl<Hasher, const M: usize, const ML: usize, const K: usize>
+pub struct BloomFilterImpl<Hasher, const ML: usize, const K: usize>
 where
     [(); K]: Sized,
-    [(); M >> 3]: Sized,
-    Hasher: HashStrategy<M, ML, K>,
+    [(); 1 << (ML - 3)]: Sized,
+    Hasher: HashStrategy<ML, K>,
 {
-    data: Box<[u8; M >> 3]>,
+    data: Box<[u8; 1 << (ML - 3)]>,
 }
 
 /// The implementation is guaranteed to be endian-safe.
-impl<Hasher, const M: usize, const ML: usize, const K: usize> BloomFilterImpl<Hasher, M, ML, K>
+impl<Hasher, const ML: usize, const K: usize> BloomFilterImpl<Hasher, ML, K>
 where
     [(); K]: Sized,
-    [(); M >> 3]: Sized,
-    Hasher: HashStrategy<M, ML, K>,
+    [(); 1 << (ML - 3)]: Sized,
+    Hasher: HashStrategy<ML, K>,
 {
     /// Creates new empty bloom filter.
     pub fn new() -> Self {
         Self {
-            data: Box::from([0u8; M >> 3]),
+            data: Box::from([0u8; 1 << (ML - 3)]),
         }
     }
 
@@ -78,7 +76,7 @@ mod tests {
     #[test]
     fn no_false_negatives() {
         // uses the default siphash for testing
-        let mut bf = BloomFilterImpl::<SipHash<{1 << 20}, 20, 2>, {1 << 20}, 20, 2>::new();
+        let mut bf = BloomFilterImpl::<SipHash<20, 2>, 20, 2>::new();
         for i in 0..98765 {
             let s = format!("test-string-{i}");
             let s = ByteStream::from_slice(s.as_bytes());

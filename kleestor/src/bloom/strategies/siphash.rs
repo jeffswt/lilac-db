@@ -10,18 +10,14 @@ use std::hash::{Hasher, SipHasher};
 /// uneven, causing waste on bits.
 ///
 /// It is also required that ML * K be less than 64 bits.
-pub struct SipHash<const M: usize, const ML: usize, const K: usize>
+pub struct SipHash<const ML: usize, const K: usize>
 where
     [(); K]: Sized, {}
 
-impl<const M: usize, const ML: usize, const K: usize> HashStrategy<M, ML, K> for SipHash<M, ML, K> {
+impl<const ML: usize, const K: usize> HashStrategy<ML, K> for SipHash<ML, K> {
     #[inline]
     #[allow(deprecated)]
     fn hash(message: &ByteStream) -> [u32; K] {
-        assert!(
-            M * 2 >= (1 << ML) && M <= (1 << ML),
-            "2^(ML-1) <= M <= 2^ML"
-        );
         assert!(ML * K <= 64, "sufficient bits for hashing");
 
         let mut hasher = SipHasher::new();
