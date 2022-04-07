@@ -82,6 +82,7 @@ impl BenchmarkManager {
         self.add(nstree::splay_seq_rw());
 
         self.add(bloomf::siphash_rp());
+        self.add(bloomf::xxhash_rp());
     }
 
     /// Add records to the result.

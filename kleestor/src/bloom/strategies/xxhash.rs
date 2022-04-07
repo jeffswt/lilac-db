@@ -1,22 +1,22 @@
 use crate::bloom::HashStrategy;
 use crate::record::ByteStream;
-#[allow(deprecated)]
-use std::hash::{Hasher, SipHasher};
+use fasthash::{xx::Hasher64, FastHasher};
+use std::hash::Hasher;
 
-/// SipHash produces hashes of up to 64 bits.
+/// XxHash produces hashes of up to 64 bits.
 ///
 /// It is required that ML * K be less than 64 bits.
-pub struct SipHash<const ML: usize, const K: usize>
+pub struct XxHash<const ML: usize, const K: usize>
 where
     [(); K]: Sized, {}
 
-impl<const ML: usize, const K: usize> HashStrategy<ML, K> for SipHash<ML, K> {
+impl<const ML: usize, const K: usize> HashStrategy<ML, K> for XxHash<ML, K> {
     #[inline]
     #[allow(deprecated)]
     fn hash(message: &ByteStream) -> [u32; K] {
         assert!(ML * K <= 64, "sufficient bits for hashing");
 
-        let mut hasher = SipHasher::new();
+        let mut hasher = Hasher64::new();
         hasher.write(message.as_ref());
         let mut finished = hasher.finish();
 

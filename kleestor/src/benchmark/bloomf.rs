@@ -1,6 +1,6 @@
 use crate::benchmark::DataPoint;
 use crate::bloom::fimpl::BloomFilterImpl;
-use crate::bloom::strategies::SipHash;
+use crate::bloom::strategies::{SipHash, XxHash};
 use crate::bloom::HashStrategy;
 use crate::record::ByteStream;
 use std::time::Instant;
@@ -28,14 +28,14 @@ where
     };
 
     // estimate hash performance on different key lengths
-    let lengths = [
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 24, 32, 64, 128, 256, 768,
-    ];
+    let mut lengths: Vec<i64> = (0..=32).collect();
+    lengths.append(&mut vec![40, 48, 56, 64, 80, 96, 128]);
+
     for length in lengths {
         let scale = if length <= 32 {
-            100000_i64
+            1000000_i64
         } else {
-            100000_i64 * 32 / length // save time
+            1000000_i64 * 32 / length // save time
         };
         // give a list of 256 samples
         let mut messages = vec![];
@@ -76,5 +76,13 @@ pub fn siphash_rp() -> Vec<BenchmarkResult> {
         bloom_filter!(SipHash),
         "bloom-siphash-fprate",
         "bloom-siphash-perf",
+    )
+}
+
+pub fn xxhash_rp() -> Vec<BenchmarkResult> {
+    run(
+        bloom_filter!(XxHash),
+        "bloom-xxhash-fprate",
+        "bloom-xxhash-perf",
     )
 }
