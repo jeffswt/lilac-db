@@ -2,10 +2,10 @@
 
 CC          = gcc
 CXX         = g++
-CPPFLAGS    = -O3 -mavx2
+CPPFLAGS    = -g -O3 -mavx2
 CFLAGS      = -std=c99
 CXXFLAGS    = -std=c++11
-LDFLAGS     = -O3 -mavx2
+LDFLAGS     = $(CPPFLAGS)
 
 BUILD_DIR   = ./target
 SRC_DIRS    = ./src
@@ -30,3 +30,6 @@ $(BUILD_DIR)/$(TARGET_EXEC): $(F_OBJS)
 	$(CXX) $(F_OBJS) -o $@ $(LDFLAGS)
 
 all: $(BUILD_DIR)/$(TARGET_EXEC)
+
+clean:
+	rm --recursive $(BUILD_DIR)

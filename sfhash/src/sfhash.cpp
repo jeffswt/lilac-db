@@ -11,15 +11,17 @@ const u64 MAGIC_1 = 0xf123456789abcdefULL;
 const u64 MAGIC_2 = 0x1727267628383583ULL;
 const u64 MAGIC_3 = 0x7654567654323456ULL;
 
-static inline u64 mix(u64 h) {				
-	h ^= h >> 23;		
-    u32 h_1 = h >> 32,
-        h_2 = h;
-    h_1 *= 0xf4325c37UL;
-    h_2 *= 0xf4325c37UL;
-    h = ((u64)h_1 << 32) ^ h_2;
-	h ^= h >> 47;
-	return h;
+const u32 MAGIC_MIX = 0xf4325c37UL;
+
+static inline u64 mix(u64 v) {
+	v ^= v >> 23;
+    u32 v_1 = v >> 32,
+        v_2 = v;
+    v_1 *= 0xf4325c37UL;
+    v_2 *= 0xf4325c37UL;
+    v = ((u64)v_1 << 32) ^ v_2;
+	v ^= v >> 47;
+	return v;
 }
 
 static inline u64 rotate_right(u64 val, u64 digs) {
@@ -42,18 +44,53 @@ void sfhash64(const void *buf, i32 len, u32 _seed, void *out) {
     u64 v1, v2, v3, v4, v;
 
     while (ptr != end1) {
+        // v = *ptr;
         v1 = *ptr;
         v2 = *(ptr + 1);
         v3 = *(ptr + 2);
         v4 = *(ptr + 3);
-        h1 ^= mix(v1);
-        h2 ^= mix(v2);
-        h3 ^= mix(v3);
-        h4 ^= mix(v4);
+        // v ^= v >> 23;
+        v1 ^= v1 >> 23;
+        v2 ^= v2 >> 23;
+        v3 ^= v3 >> 23;
+        v4 ^= v4 >> 23;
+        // u32 v_1 = v >> 32,
+        //     v_2 = v;
+        u32 v1_1 = v1 >> 32,
+            v1_2 = v1;
+        u32 v2_1 = v2 >> 32,
+            v2_2 = v2;
+        u32 v3_1 = v3 >> 32,
+            v3_2 = v3;
+        u32 v4_1 = v4 >> 32,
+            v4_2 = v4;
+        // v_1 *= MAGIC_MIX;
+        // v_2 *= MAGIC_MIX;
+        v1_1 *= MAGIC_MIX;
+        v1_2 *= MAGIC_MIX;
+        v2_1 *= MAGIC_MIX;
+        v2_2 *= MAGIC_MIX;
+        v3_1 *= MAGIC_MIX;
+        v3_2 *= MAGIC_MIX;
+        v4_1 *= MAGIC_MIX;
+        v4_2 *= MAGIC_MIX;
+        // v = ((u64)v_1 << 32) ^ v_2;
+        v1 = ((u64)v1_1 << 32) ^ v1_2;
+        v2 = ((u64)v2_1 << 32) ^ v2_2;
+        v3 = ((u64)v3_1 << 32) ^ v3_2;
+        v4 = ((u64)v4_1 << 32) ^ v4_2;
+        // v ^= v >> 47;
+        // h ^= mix(v);
+        h1 ^= v1 ^ (v1 >> 47);
+        h2 ^= v2 ^ (v2 >> 47);
+        h3 ^= v3 ^ (v3 >> 47);
+        h4 ^= v4 ^ (v4 >> 47);
+        // h *= magic;
         h1 *= magic;
         h2 *= magic;
         h3 *= magic;
         h4 *= magic;
+        // ptr++;
         ptr += 4;
     }
 
