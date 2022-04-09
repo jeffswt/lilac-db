@@ -2,10 +2,10 @@
 
 CC          = gcc
 CXX         = g++
-CPPFLAGS    = -O2
+CPPFLAGS    = -O3 -mavx2
 CFLAGS      = -std=c99
 CXXFLAGS    = -std=c++11
-LDFLAGS     = -O2
+LDFLAGS     = -O3 -mavx2
 
 BUILD_DIR   = ./target
 SRC_DIRS    = ./src

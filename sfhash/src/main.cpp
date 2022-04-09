@@ -6,6 +6,7 @@
 #include "DifferentialTest.h"
 #include "PMurHash.h"
 #include "FastHash.h"
+#include "sfhash.h"
 
 #include <stdio.h>
 #include <time.h>
@@ -84,6 +85,8 @@ HashInfo g_hashes[] =
 
   { fasthash32,           32, 0xCE25265D, "FastHash32",  "FastHash32 for x64, 32-bit" },
   { fasthash64,           64, 0x03280FE7, "FastHash64",  "FastHash64 for x64, 64-bit" },
+
+  { sfhash64,             64, 0x47B5E7B6, "sfHash64",    "SuperFastHash64 for x64, 64-bit" }, 
 };
 
 HashInfo * findHash ( const char * name )
