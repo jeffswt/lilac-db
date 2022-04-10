@@ -86,7 +86,7 @@ HashInfo g_hashes[] =
   { fasthash32,           32, 0xCE25265D, "FastHash32",  "FastHash32 for x64, 32-bit" },
   { fasthash64,           64, 0x03280FE7, "FastHash64",  "FastHash64 for x64, 64-bit" },
 
-  { sfhash64,             64, 0x50C08D4A, "sfHash64",    "SuperFastHash64 for x64, 64-bit" }, 
+  { sfhash64,             64, 0x6C241212, "sfHash64",    "SuperFastHash64 for x64, 64-bit" }, 
 };
 
 HashInfo * findHash ( const char * name )
@@ -577,17 +577,17 @@ int main ( int argc, char ** argv )
 
   g_testSanity = true;
   g_testSpeed = true;
-  // g_testDiff = true;
-  // g_testDiffDist = true;
-  // g_testAvalanche = true;
-  // g_testBIC = true;
+  g_testDiff = true;
+  g_testDiffDist = true;
+  g_testAvalanche = true;
+  g_testBIC = true;
   g_testCyclic = true;
   g_testTwoBytes = true;
-  // g_testSparse = true;
-  // g_testPermutation = true;
+  g_testSparse = true;
+  g_testPermutation = true;
   g_testWindow = true;
-  // g_testText = true;
-  // g_testZeroes = true;
+  g_testText = true;
+  g_testZeroes = true;
   // g_testSeed = true;
 
   testHash(hashToTest);

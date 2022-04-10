@@ -7,22 +7,13 @@ typedef uint8_t u8;
 typedef uint32_t u32;
 typedef uint64_t u64;
 
-const u64 MAGIC_OFFSET_1 = 0xf123456789abcdefULL;
-const u64 MAGIC_OFFSET_2 = 0x1727267628383583ULL;
-const u64 MAGIC_SEED = 0x1234567812345678ULL;
-const u32 MAGIC_SHIFT_32 = 0xf21e6d19UL;
-const u64 MAGIC_SHIFT_64 = 0x880355f21e6d1965ULL;
-const u32 MAGIC_MIX_32 = 0xf4325c37UL;
-const u64 MAGIC_MIX_64 = 0x2127599bf4325c37ULL;
-
-const u32 MAGIC_SHIFT_COMB_1 = 0x78912abcUL;
-const u32 MAGIC_SHIFT_COMB_2 = 0x65152623UL;
-const u32 MAGIC_SHIFT_COMB_3 = 0xF109BC19UL;
-const u32 MAGIC_SHIFT_COMB_4 = 0xcbae8209UL;
-const u32 MAGIC_SHIFT_COMB_5 = 0xabcdef12UL;
-const u32 MAGIC_SHIFT_COMB_6 = 0xdd983111UL;
-const u32 MAGIC_SHIFT_COMB_7 = 0xb324967bUL;
-const u32 MAGIC_SHIFT_COMB_8 = 0xa1386782UL;
+const u64 MAGIC_SEED = 0x5894f1d70e083f7fULL;
+const u32 MAGIC_SHIFT_32 = 0x700c35efUL;
+const u64 MAGIC_SHIFT_64 = 0xfffcf56d45a9e713ULL;
+const u64 MAGIC_OFFSET_1 = 0xb4673fb90d2d50e3ULL;
+const u64 MAGIC_OFFSET_2 = 0x6c0c3d0db96af263ULL;
+const u32 MAGIC_MIX_32 = 0xaad84c4fUL;
+const u64 MAGIC_MIX_64 = 0x695f94ff3051caa9ULL;
 
 static inline u64 mix(u64 v) {
     v ^= v >> 17;
@@ -127,6 +118,8 @@ void sfhash64(const void *buf, i32 len, u32 _seed, void *out) {
     }
 
     // remaining at most 31 bytes
+    // branch predictors should be able to predict this loop
+    // so we aren't unwrapping it anyway
     while (ptr != end2) {
 		v = *ptr;
 		h ^= mix(v);
