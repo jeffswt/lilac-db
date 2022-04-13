@@ -233,6 +233,10 @@ void test ( hashfunc<hashtype> hash, HashInfo * info )
     result &= AvalancheTest< Blob<144>, hashtype > (hash,300000);
     result &= AvalancheTest< Blob<152>, hashtype > (hash,300000);
 
+    result &= AvalancheTest< Blob<192>, hashtype > (hash,300000);
+    result &= AvalancheTest< Blob<256>, hashtype > (hash,300000);
+    result &= AvalancheTest< Blob<512>, hashtype > (hash,300000);
+
     if(!result) printf("*********FAIL*********\n");
     printf("\n");
   }
