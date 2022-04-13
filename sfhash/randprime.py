@@ -4,7 +4,7 @@ import sympy
 
 
 def genprime(bits: int) -> int:
-    return sympy.randprime(2**(bits - 3), 2**bits)
+    return sympy.randprime(2**(bits - 3) * 5, 2**bits)
 
 
 if __name__ == '__main__':

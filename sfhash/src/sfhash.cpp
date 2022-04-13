@@ -7,22 +7,22 @@ typedef uint8_t u8;
 typedef uint32_t u32;
 typedef uint64_t u64;
 
-const u64 MAGIC_SEED = 0x5894f1d70e083f7fULL;
-const u64 MAGIC_SHIFT_1 = 0x65a9e6f3500c3625ULL;
-const u64 MAGIC_SHIFT_2 = 0x2d2d50b5dffcf597ULL;
-const u64 MAGIC_SHIFT_3 = 0xd96af23194673fc3ULL;
-const u64 MAGIC_SHIFT_4 = 0x5051caa88ad84c69ULL;
-const u64 MAGIC_OFFSET_1 = 0x55e392f6495f951fULL;
-const u64 MAGIC_OFFSET_2 = 0xf587327f9c3575f1ULL;
-const u64 MAGIC_MIX_1 = 0xe1c91479797ffbffULL;
-const u64 MAGIC_MIX_2 = 0x34f821a6d42ee0c1ULL;
-const u64 MAGIC_MIX_3 = 0xdca0986e9a623025ULL;
-const u64 MAGIC_MIX_4 = 0x452ff2dc5bc471b3ULL;
+const u64 MAGIC_SEED = 0xbc4a78eb0e083fb5ULL;
+const u64 MAGIC_SHIFT_1 = 0xc2d4f379500c363fULL;
+const u64 MAGIC_SHIFT_2 = 0xa696a85adffcf585ULL;
+const u64 MAGIC_SHIFT_3 = 0xfcb5791894673fd3ULL;
+const u64 MAGIC_SHIFT_4 = 0xb828e5548ad84c69ULL;
+const u64 MAGIC_OFFSET_1 = 0xbaf1c97b495f954fULL;
+const u64 MAGIC_OFFSET_2 = 0xaa7c10d3d42ee0b7ULL;
+const u64 MAGIC_MIX_1 = 0xfe504c379a62302fULL;
+const u64 MAGIC_MIX_2 = 0xb297f96e5bc471c9ULL;
+const u64 MAGIC_MIX_3 = 0xd1225489d030a27dULL;
+const u64 MAGIC_MIX_4 = 0xc181d5224d45565fULL;
 
 static inline u64 mix(u64 v) {
-    v ^= v >> 17;
+    v ^= v >> 23;
     v *= MAGIC_MIX_1;
-    v ^= v >> 49;
+    v ^= v >> 47;
     return v;
 }
 
@@ -50,17 +50,17 @@ void sfhash64(const void *buf, i32 len, u32 _seed, void *out) {
             v2 = *(ptr + 1);
             v3 = *(ptr + 2);
             v4 = *(ptr + 3);
-            // v *= mix
+            // v *= magic;
             v1 *= MAGIC_MIX_1;
             v2 *= MAGIC_MIX_2;
             v3 *= MAGIC_MIX_3;
             v4 *= MAGIC_MIX_4;
-            // h += v;
-            h1 = rotate_right(h1 + v1, 31);
-            h2 = rotate_right(h1 + v2, 31);
-            h3 = rotate_right(h1 + v3, 31);
-            h4 = rotate_right(h1 + v4, 31);
-            // h *= shift;
+            // h ^= v;
+            h1 ^= v;
+            h2 ^= v;
+            h3 ^= v;
+            h4 ^= v;
+            // h *= magic;
             h1 *= MAGIC_SHIFT_1;
             h2 *= MAGIC_SHIFT_2;
             h3 *= MAGIC_SHIFT_3;
