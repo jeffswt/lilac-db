@@ -52,21 +52,37 @@ void sfhash64(const void *buf, i32 len, u32 _seed, void *out) {
             v2 ^= v2 >> 23;
             v3 ^= v3 >> 23;
             v4 ^= v4 >> 23;
-            // v ^= v >> 47
-            v1 ^= v1 >> 47;
-            v2 ^= v2 >> 47;
-            v3 ^= v3 >> 47;
-            v4 ^= v4 >> 47;
             // h ^= v;
             h1 ^= v1;
             h2 ^= v2;
             h3 ^= v3;
             h4 ^= v4;
             // h *= magic;
-            h1 *= MAGIC_SHIFT_1;
-            h2 *= MAGIC_SHIFT_2;
-            h3 *= MAGIC_SHIFT_3;
-            h4 *= MAGIC_SHIFT_4;
+            u32 h1_1 = h1 >> 32, h1_2 = h1,
+                h2_1 = h2 >> 32, h2_2 = h2,
+                h3_1 = h3 >> 32, h3_2 = h3,
+                h4_1 = h4 >> 32, h4_2 = h4;
+            h1_1 *= (u32)MAGIC_SHIFT_1;
+            h1_2 *= (u32)MAGIC_SHIFT_1;
+            h2_1 *= (u32)MAGIC_SHIFT_1;
+            h2_2 *= (u32)MAGIC_SHIFT_1;
+            h3_1 *= (u32)MAGIC_SHIFT_1;
+            h3_2 *= (u32)MAGIC_SHIFT_1;
+            h4_1 *= (u32)MAGIC_SHIFT_1;
+            h4_2 *= (u32)MAGIC_SHIFT_1;
+            h1 = ((u64)h1_1 << 32) ^ h1_2,
+            h2 = ((u64)h2_1 << 32) ^ h2_2,
+            h3 = ((u64)h3_1 << 32) ^ h3_2,
+            h4 = ((u64)h4_1 << 32) ^ h4_2,
+            // h1 *= MAGIC_SHIFT_1;
+            // h2 *= MAGIC_SHIFT_2;
+            // h3 *= MAGIC_SHIFT_3;
+            // h4 *= MAGIC_SHIFT_4;
+            // h ^= h >> 47
+            h1 ^= h1 >> 47;
+            h2 ^= h2 >> 47;
+            h3 ^= h3 >> 47;
+            h4 ^= h4 >> 47;
             // ptr++;
             ptr += 4;
         }
