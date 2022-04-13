@@ -9,10 +9,19 @@ def genprime(bits: int) -> int:
 
 if __name__ == '__main__':
     random.seed(23333)
-    print(f'const u64 MAGIC_SEED = {hex(genprime(64))}ULL;')
-    print(f'const u32 MAGIC_SHIFT_32 = {hex(genprime(32))}UL;')
-    print(f'const u64 MAGIC_SHIFT_64 = {hex(genprime(64))}ULL;')
-    print(f'const u64 MAGIC_OFFSET_1 = {hex(genprime(64))}ULL;')
-    print(f'const u64 MAGIC_OFFSET_2 = {hex(genprime(64))}ULL;')
-    print(f'const u32 MAGIC_MIX_32 = {hex(genprime(32))}UL;')
-    print(f'const u64 MAGIC_MIX_64 = {hex(genprime(64))}ULL;')
+    fields = [
+        ('MAGIC_SEED', 64),
+        ('MAGIC_SHIFT_1', 64),
+        ('MAGIC_SHIFT_2', 64),
+        ('MAGIC_SHIFT_3', 64),
+        ('MAGIC_SHIFT_4', 64),
+        ('MAGIC_OFFSET_1', 64),
+        ('MAGIC_OFFSET_2', 64),
+        ('MAGIC_MIX_1', 64),
+        ('MAGIC_MIX_2', 64),
+        ('MAGIC_MIX_3', 64),
+        ('MAGIC_MIX_4', 64),
+    ]
+    for name, bits in fields:
+        print(f'const u{bits} {name} = {hex(genprime(bits))}ULL;')
+    pass

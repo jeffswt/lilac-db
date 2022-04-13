@@ -8,16 +8,20 @@ typedef uint32_t u32;
 typedef uint64_t u64;
 
 const u64 MAGIC_SEED = 0x5894f1d70e083f7fULL;
-const u32 MAGIC_SHIFT_32 = 0x700c35efUL;
-const u64 MAGIC_SHIFT_64 = 0xfffcf56d45a9e713ULL;
-const u64 MAGIC_OFFSET_1 = 0xb4673fb90d2d50e3ULL;
-const u64 MAGIC_OFFSET_2 = 0x6c0c3d0db96af263ULL;
-const u32 MAGIC_MIX_32 = 0xaad84c4fUL;
-const u64 MAGIC_MIX_64 = 0x695f94ff3051caa9ULL;
+const u64 MAGIC_SHIFT_1 = 0x65a9e6f3500c3625ULL;
+const u64 MAGIC_SHIFT_2 = 0x2d2d50b5dffcf597ULL;
+const u64 MAGIC_SHIFT_3 = 0xd96af23194673fc3ULL;
+const u64 MAGIC_SHIFT_4 = 0x5051caa88ad84c69ULL;
+const u64 MAGIC_OFFSET_1 = 0x55e392f6495f951fULL;
+const u64 MAGIC_OFFSET_2 = 0xf587327f9c3575f1ULL;
+const u64 MAGIC_MIX_1 = 0xe1c91479797ffbffULL;
+const u64 MAGIC_MIX_2 = 0x34f821a6d42ee0c1ULL;
+const u64 MAGIC_MIX_3 = 0xdca0986e9a623025ULL;
+const u64 MAGIC_MIX_4 = 0x452ff2dc5bc471b3ULL;
 
 static inline u64 mix(u64 v) {
     v ^= v >> 17;
-    v *= MAGIC_MIX_64;
+    v *= MAGIC_MIX_1;
     v ^= v >> 49;
     return v;
 }
@@ -32,12 +36,12 @@ void sfhash64(const void *buf, i32 len, u32 _seed, void *out) {
     const u64 *end1 = ptr + ((len >> 5) << 2);
     const u64 *end2 = ptr + (len >> 3);
 
-    u64 h3 = MAGIC_SEED ^ (len * MAGIC_SHIFT_64);
+    u64 h3 = MAGIC_SEED ^ (len * MAGIC_SHIFT_1);
     u64 h, v;
     if (ptr != end1) {
-        u64 h2 = h3 - MAGIC_OFFSET_1,
+        u64 h2 = h3 + MAGIC_OFFSET_1,
             h1 = h2 + MAGIC_OFFSET_2,
-            h4 = h3 + MAGIC_OFFSET_1;
+            h4 = h3 - MAGIC_OFFSET_2;
         u64 v1, v2, v3, v4, v;
 
         while (ptr != end1) {
@@ -46,73 +50,28 @@ void sfhash64(const void *buf, i32 len, u32 _seed, void *out) {
             v2 = *(ptr + 1);
             v3 = *(ptr + 2);
             v4 = *(ptr + 3);
-            // v ^= v >> 23;
-            v1 ^= v1 >> 23;
-            v2 ^= v2 >> 23;
-            v3 ^= v3 >> 23;
-            v4 ^= v4 >> 23;
-            // u32 v_1 = v >> 32,
-            //     v_2 = v;
-            u32 v1_1 = v1 >> 32,
-                v1_2 = v1;
-            u32 v2_1 = v2 >> 32,
-                v2_2 = v2;
-            u32 v3_1 = v3 >> 32,
-                v3_2 = v3;
-            u32 v4_1 = v4 >> 32,
-                v4_2 = v4;
-            // v_1 *= MAGIC_MIX_32;
-            // v_2 *= MAGIC_MIX_32;
-            v1_1 *= MAGIC_MIX_32;
-            v1_2 *= MAGIC_MIX_32;
-            v2_1 *= MAGIC_MIX_32;
-            v2_2 *= MAGIC_MIX_32;
-            v3_1 *= MAGIC_MIX_32;
-            v3_2 *= MAGIC_MIX_32;
-            v4_1 *= MAGIC_MIX_32;
-            v4_2 *= MAGIC_MIX_32;
-            // v = ((u64)v_1 << 32) ^ v_2;
-            v1 = ((u64)v1_1 << 32) ^ v1_2;
-            v2 = ((u64)v2_1 << 32) ^ v2_2;
-            v3 = ((u64)v3_1 << 32) ^ v3_2;
-            v4 = ((u64)v4_1 << 32) ^ v4_2;
-            // v ^= v >> 47;
-            // h ^= mix(v);
-            h1 ^= v1 ^ (v1 >> 47);
-            h2 ^= v2 ^ (v2 >> 47);
-            h3 ^= v3 ^ (v3 >> 47);
-            h4 ^= v4 ^ (v4 >> 47);
-            // h *= magic;
-            u32 h1_1 = h1 >> 32,
-                h1_2 = h1;
-            u32 h2_1 = h2 >> 32,
-                h2_2 = h2;
-            u32 h3_1 = h3 >> 32,
-                h3_2 = h3;
-            u32 h4_1 = h4 >> 32,
-                h4_2 = h4;
-            h1_1 *= MAGIC_SHIFT_32;
-            h1_2 *= MAGIC_SHIFT_32;
-            h2_1 *= MAGIC_SHIFT_32;
-            h2_2 *= MAGIC_SHIFT_32;
-            h3_1 *= MAGIC_SHIFT_32;
-            h3_2 *= MAGIC_SHIFT_32;
-            h4_1 *= MAGIC_SHIFT_32;
-            h4_2 *= MAGIC_SHIFT_32;
-            h1 = ((u64)h1_1 << 32) ^ h1_2;
-            h2 = ((u64)h2_1 << 32) ^ h2_2;
-            h3 = ((u64)h3_1 << 32) ^ h3_2;
-            h4 = ((u64)h4_1 << 32) ^ h4_2;
+            // v *= mix
+            v1 *= MAGIC_MIX_1;
+            v2 *= MAGIC_MIX_2;
+            v3 *= MAGIC_MIX_3;
+            v4 *= MAGIC_MIX_4;
+            // h += v;
+            h1 = rotate_right(h1 + v1, 31);
+            h2 = rotate_right(h1 + v2, 31);
+            h3 = rotate_right(h1 + v3, 31);
+            h4 = rotate_right(h1 + v4, 31);
+            // h *= shift;
+            h1 *= MAGIC_SHIFT_1;
+            h2 *= MAGIC_SHIFT_2;
+            h3 *= MAGIC_SHIFT_3;
+            h4 *= MAGIC_SHIFT_4;
             // ptr++;
             ptr += 4;
         }
         h = rotate_right(h1, 1);
-        h *= MAGIC_SHIFT_64;
-        h ^= rotate_right(h2, 3);
-        h *= MAGIC_SHIFT_64;
-        h ^= rotate_right(h3, 6);
-        h *= MAGIC_SHIFT_64;
-        h ^= rotate_right(h4, 11);
+        h += rotate_right(h2, 3);
+        h += rotate_right(h3, 6);
+        h += rotate_right(h4, 11);
     } else {
         h = h3;
     }
@@ -122,8 +81,8 @@ void sfhash64(const void *buf, i32 len, u32 _seed, void *out) {
     // so we aren't unwrapping it anyway
     while (ptr != end2) {
 		v = *ptr;
-		h ^= mix(v);
-		h *= MAGIC_SHIFT_64;
+        h ^= mix(v);
+        h *= MAGIC_SHIFT_1;
         ptr++;
 	}
 
@@ -141,7 +100,7 @@ void sfhash64(const void *buf, i32 len, u32 _seed, void *out) {
     }
 
     h ^= mix(v);
-    // h *= magic;
+    h *= MAGIC_SHIFT_4;
 
     *(u64*)out = mix(h);
 }
