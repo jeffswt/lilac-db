@@ -50,11 +50,16 @@ void sfhash64(const void *buf, i32 len, u32 _seed, void *out) {
             v2 = *(ptr + 1);
             v3 = *(ptr + 2);
             v4 = *(ptr + 3);
-            // // v *= magic;
-            // v1 *= MAGIC_MIX_1;
-            // v2 *= MAGIC_MIX_2;
-            // v3 *= MAGIC_MIX_3;
-            // v4 *= MAGIC_MIX_4;
+            // v ^= v >> 23
+            v1 ^= v1 >> 23;
+            v2 ^= v2 >> 23;
+            v3 ^= v3 >> 23;
+            v4 ^= v4 >> 23;
+            // v ^= v >> 47
+            v1 ^= v1 >> 47;
+            v2 ^= v2 >> 47;
+            v3 ^= v3 >> 47;
+            v4 ^= v4 >> 47;
             // h ^= v;
             h1 ^= v1;
             h2 ^= v2;
@@ -69,9 +74,9 @@ void sfhash64(const void *buf, i32 len, u32 _seed, void *out) {
             ptr += 4;
         }
         h = rotate_right(h1, 1);
-        h += rotate_right(h2, 3);
-        h += rotate_right(h3, 6);
-        h += rotate_right(h4, 11);
+        h ^= rotate_right(h2, 3);
+        h ^= rotate_right(h3, 6);
+        h ^= rotate_right(h4, 11);
     } else {
         h = h3;
     }
