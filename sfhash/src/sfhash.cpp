@@ -14,14 +14,11 @@ const u64 MAGIC_SHIFT_3 = 0xfcb5791894673fd3ULL;
 const u64 MAGIC_SHIFT_4 = 0xb828e5548ad84c69ULL;
 const u64 MAGIC_OFFSET_1 = 0xbaf1c97b495f954fULL;
 const u64 MAGIC_OFFSET_2 = 0xaa7c10d3d42ee0b7ULL;
-const u64 MAGIC_MIX_1 = 0xfe504c379a62302fULL;
-const u64 MAGIC_MIX_2 = 0xb297f96e5bc471c9ULL;
-const u64 MAGIC_MIX_3 = 0xd1225489d030a27dULL;
-const u64 MAGIC_MIX_4 = 0xc181d5224d45565fULL;
+const u64 MAGIC_MIX = 0xfe504c379a62302fULL;
 
 static inline u64 mix(u64 v) {
     v ^= v >> 23;
-    v *= MAGIC_MIX_1;
+    v *= MAGIC_MIX;
     v ^= v >> 47;
     return v;
 }
@@ -36,7 +33,7 @@ void sfhash64(const void *buf, i32 len, u32 _seed, void *out) {
     const u64 *end1 = ptr + ((len >> 5) << 2);
     const u64 *end2 = ptr + (len >> 3);
 
-    u64 h3 = MAGIC_SEED ^ (len * MAGIC_SHIFT_1);
+    u64 h3 = MAGIC_SEED ^ _seed ^ (len * MAGIC_SHIFT_1);
     u64 h, v;
     if (ptr != end1) {
         u64 h2 = h3 + MAGIC_OFFSET_1,

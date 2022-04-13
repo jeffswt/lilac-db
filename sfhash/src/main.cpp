@@ -86,7 +86,7 @@ HashInfo g_hashes[] =
   { fasthash32,           32, 0xCE25265D, "FastHash32",  "FastHash32 for x64, 32-bit" },
   { fasthash64,           64, 0x03280FE7, "FastHash64",  "FastHash64 for x64, 64-bit" },
 
-  { sfhash64,             64, 0x6C241212, "sfHash64",    "SuperFastHash64 for x64, 64-bit" }, 
+  { sfhash64,             64, 0x45EC48B8, "sfHash64",    "SuperFastHash64 for x64, 64-bit" }, 
 };
 
 HashInfo * findHash ( const char * name )
@@ -592,7 +592,7 @@ int main ( int argc, char ** argv )
   g_testWindow = true;
   g_testText = true;
   g_testZeroes = true;
-  // g_testSeed = true;
+  g_testSeed = true;
 
   testHash(hashToTest);
 
