@@ -1,36 +1,33 @@
 use crate::bloom::HashStrategy;
 use crate::record::ByteStream;
-use std::hash::Hasher;
 use std::intrinsics::rotate_right;
 use std::num::Wrapping;
 use std::ops::Shr;
 use std::simd::Simd;
 
-// /// XxHash produces hashes of up to 64 bits.
-// ///
-// /// It is required that ML * K be less than 64 bits.
-// pub struct SfHash64<const ML: usize, const K: usize>
-// where
-//     [(); K]: Sized, {}
+/// sfHash64 produces hashes of up to 64 bits.
+///
+/// It is required that ML * K be less than 64 bits.
+pub struct SfHash64<const ML: usize, const K: usize>
+where
+    [(); K]: Sized, {}
 
-// impl<const ML: usize, const K: usize> HashStrategy<ML, K> for XxHash<ML, K> {
-//     #[inline]
-//     fn hash(message: &ByteStream) -> [u32; K] {
-//         assert!(ML * K <= 64, "sufficient bits for hashing");
+impl<const ML: usize, const K: usize> HashStrategy<ML, K> for SfHash64<ML, K> {
+    #[inline]
+    fn hash(message: &ByteStream) -> [u32; K] {
+        assert!(ML * K <= 64, "sufficient bits for hashing");
 
-//         let mut hasher = Hasher64::new();
-//         hasher.write(message.as_ref());
-//         let mut finished = hasher.finish();
+        let mut finished = unsafe { sfhash64(message.as_ref(), message.len() as u64) };
 
-//         let mut result = [0u32; K];
-//         let mask: u64 = (1 << ML) - 1;
-//         for i in 0..K {
-//             result[i] = (finished & mask) as u32;
-//             finished >>= ML;
-//         }
-//         result
-//     }
-// }
+        let mut result = [0u32; K];
+        let mask: u64 = (1 << ML) - 1;
+        for i in 0..K {
+            result[i] = (finished & mask) as u32;
+            finished >>= ML;
+        }
+        result
+    }
+}
 
 // Constants for hashing
 const MAGIC_SEED: u64 = 0xbc4a78eb0e083fb5_u64;

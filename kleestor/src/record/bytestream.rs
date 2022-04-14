@@ -22,6 +22,10 @@ impl ByteStream {
     pub fn as_ref(&self) -> &[u8] {
         self.data.as_ref()
     }
+
+    pub fn len(&self) -> usize {
+        self.data.len()
+    }
 }
 
 impl PartialEq for ByteStream {

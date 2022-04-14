@@ -83,6 +83,7 @@ impl BenchmarkManager {
 
         self.add(bloomf::siphash_rp());
         self.add(bloomf::xxhash_rp());
+        self.add(bloomf::sfhash64_rp());
     }
 
     /// Add records to the result.
