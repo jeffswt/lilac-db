@@ -177,7 +177,7 @@ void sfhash32(const void *buf, i32 len, u32 _seed, void *out) {
         h ^= mix(v);
         h *= MAGIC_SHIFT_4;
 
-        *(u64*)out = mix(h);
+        *(u32*)out = h ^ (h >> 32);
         return;
     }
 
@@ -264,6 +264,5 @@ void sfhash32(const void *buf, i32 len, u32 _seed, void *out) {
     h ^= mix(v);
     h *= MAGIC_SHIFT_4;
 
-    u32 h_32 = h ^ (h >> 32);
-    *(u32*)out = h_32;
+    *(u32*)out = h ^ (h >> 32);
 }
