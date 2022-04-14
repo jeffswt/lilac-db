@@ -3,7 +3,6 @@ use crate::bloom::fimpl::BloomFilterImpl;
 use crate::bloom::strategies::{SfHash64, SipHash, XxHash};
 use crate::bloom::HashStrategy;
 use crate::record::ByteStream;
-use std::fmt::format;
 use std::time::Instant;
 
 use super::BenchmarkResult;
