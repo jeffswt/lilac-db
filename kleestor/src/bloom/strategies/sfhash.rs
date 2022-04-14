@@ -49,13 +49,13 @@ const MAGIC_MIX: u64 = 0xed27a0e9f72a6d47_u64;
 fn mix(mut v: u64) -> u64 {
     v ^= v >> 23;
     v *= MAGIC_MIX;
-    v ^ v >> 47
+    v ^ (v >> 47)
 }
 
 /// Expands to 1 of the 7 switch-cases in the sfhash terminator.
 macro_rules! match_byte {
-    ($dest:ident, $src:ident, $cmp:ident, $length:literal, $offset:literal, $shift:literal) => {
-        if $cmp == $length {
+    ($dest:ident, $src:ident, $cmp:ident, $offset:literal, $shift:literal) => {
+        if $cmp > $offset {
             $dest ^= (*$src.offset($offset) as u64) << $shift;
         }
     };
@@ -64,13 +64,13 @@ macro_rules! match_byte {
 /// Declares a sfhash terminator (7 bytes max).
 macro_rules! match_bytes {
     ($dest:ident, $src:ident, $cmp:ident) => {
-        match_byte!($dest, $src, $cmp, 7, 6, 48);
-        match_byte!($dest, $src, $cmp, 6, 5, 40);
-        match_byte!($dest, $src, $cmp, 5, 4, 32);
-        match_byte!($dest, $src, $cmp, 4, 3, 24);
-        match_byte!($dest, $src, $cmp, 3, 2, 16);
-        match_byte!($dest, $src, $cmp, 2, 1, 8);
-        if $cmp == 1 {
+        match_byte!($dest, $src, $cmp, 6, 48);
+        match_byte!($dest, $src, $cmp, 5, 40);
+        match_byte!($dest, $src, $cmp, 4, 32);
+        match_byte!($dest, $src, $cmp, 3, 24);
+        match_byte!($dest, $src, $cmp, 2, 16);
+        match_byte!($dest, $src, $cmp, 1, 8);
+        if $cmp > 0 {
             $dest ^= *$src as u64;
         }
     };
@@ -137,11 +137,11 @@ unsafe fn sfhash64(buffer: &[u8], len: u64) -> u64 {
 
     // batch hash 8 bytes at a time, up to 24 bytes
     while ptr != end2 {
-		v = *ptr;
+        v = *ptr;
         h ^= mix(v);
         h *= MAGIC_SHIFT_1;
         ptr = ptr.offset(1);
-	}
+    }
 
     // hash the last 7 bytes
     let ptr2 = ptr as *const u8;
@@ -163,18 +163,18 @@ fn sfhash64_signature() -> u32 {
         let digest = unsafe { sfhash64(&message, n) };
         message.push(n as u8);
         // push data in little-endian
-        digest_bytes.push(((digest >> 56) & 0xff) as u8);
-        digest_bytes.push(((digest >> 48) & 0xff) as u8);
-        digest_bytes.push(((digest >> 40) & 0xff) as u8);
-        digest_bytes.push(((digest >> 32) & 0xff) as u8);
-        digest_bytes.push(((digest >> 24) & 0xff) as u8);
-        digest_bytes.push(((digest >> 16) & 0xff) as u8);
-        digest_bytes.push(((digest >> 8) & 0xff) as u8);
         digest_bytes.push(((digest >> 0) & 0xff) as u8);
+        digest_bytes.push(((digest >> 8) & 0xff) as u8);
+        digest_bytes.push(((digest >> 16) & 0xff) as u8);
+        digest_bytes.push(((digest >> 24) & 0xff) as u8);
+        digest_bytes.push(((digest >> 32) & 0xff) as u8);
+        digest_bytes.push(((digest >> 40) & 0xff) as u8);
+        digest_bytes.push(((digest >> 48) & 0xff) as u8);
+        digest_bytes.push(((digest >> 56) & 0xff) as u8);
     }
     // hash the generated 2048 bytes into another digest
     let digest = unsafe { sfhash64(&digest_bytes, 2048) };
-    (digest ^ (digest >> 32)) as u32
+    digest as u32
 }
 
 #[cfg(test)]
