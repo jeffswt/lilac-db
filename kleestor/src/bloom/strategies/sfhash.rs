@@ -2,6 +2,7 @@ use crate::bloom::HashStrategy;
 use crate::record::ByteStream;
 use std::hash::Hasher;
 use std::intrinsics::rotate_right;
+use std::num::Wrapping;
 use std::ops::Shr;
 use std::simd::Simd;
 
@@ -45,10 +46,17 @@ const MAGIC_OFFSET_1: u64 = 0xff43a9d0c1c914cd_u64;
 const MAGIC_OFFSET_2: u64 = 0xf049ed58f79e6153_u64;
 const MAGIC_MIX: u64 = 0xed27a0e9f72a6d47_u64;
 
+/// Unchecked in-place multiply.
+macro_rules! wrapped_mul_inpl {
+    ($dest:ident, $src:ident) => {
+        $dest = (Wrapping($dest) * Wrapping($src)).0;
+    };
+}
+
 #[inline]
 fn mix(mut v: u64) -> u64 {
     v ^= v >> 23;
-    v *= MAGIC_MIX;
+    wrapped_mul_inpl!(v, MAGIC_MIX);
     v ^ (v >> 47)
 }
 
@@ -79,11 +87,11 @@ macro_rules! match_bytes {
 /// An sfHash64 implementation without seed intervention.
 ///
 /// This algorithm is not portable between machines of different endiannesses.
-#[inline]
+#[inline(always)]
 unsafe fn sfhash64(buffer: &[u8], len: u64) -> u64 {
     let mut ptr = buffer.as_ptr() as *const u64;
     let end2 = ptr.offset((len as isize) >> 3); // 64-bit alignment
-    let mut h3: u64 = MAGIC_SEED ^ (len * MAGIC_SHIFT_1);
+    let mut h3: u64 = MAGIC_SEED ^ (Wrapping(len) * Wrapping(MAGIC_SHIFT_1)).0;
     let mut v: u64;
 
     // small key hashes (< 256 bits) should be dealt with with priority
@@ -91,7 +99,7 @@ unsafe fn sfhash64(buffer: &[u8], len: u64) -> u64 {
         while ptr != end2 {
             v = *ptr;
             h3 ^= mix(v);
-            h3 *= MAGIC_SHIFT_1;
+            wrapped_mul_inpl!(h3, MAGIC_SHIFT_1);
             ptr = ptr.offset(1);
         }
 
@@ -101,7 +109,7 @@ unsafe fn sfhash64(buffer: &[u8], len: u64) -> u64 {
         match_bytes!(v, ptr2, len);
 
         h3 ^= mix(v);
-        h3 *= MAGIC_SHIFT_4;
+        wrapped_mul_inpl!(h3, MAGIC_SHIFT_4);
         return mix(h3);
     }
 
@@ -110,10 +118,10 @@ unsafe fn sfhash64(buffer: &[u8], len: u64) -> u64 {
     let mut h: u64;
     if ptr != end1 {
         let mut hv = Simd::<u64, 4>::from([
-            h3 + MAGIC_OFFSET_1 + MAGIC_OFFSET_2,
-            h3 + MAGIC_OFFSET_1,
+            (Wrapping(h3) + Wrapping(MAGIC_OFFSET_1) + Wrapping(MAGIC_OFFSET_2)).0,
+            (Wrapping(h3) + Wrapping(MAGIC_OFFSET_1)).0,
             h3,
-            h3 - MAGIC_OFFSET_2,
+            (Wrapping(h3) - Wrapping(MAGIC_OFFSET_2)).0,
         ]);
         let vec_shr_23 = Simd::from([23, 23, 23, 23]);
         let vec_shr_47 = Simd::from([47, 47, 47, 47]);
@@ -139,7 +147,7 @@ unsafe fn sfhash64(buffer: &[u8], len: u64) -> u64 {
     while ptr != end2 {
         v = *ptr;
         h ^= mix(v);
-        h *= MAGIC_SHIFT_1;
+        wrapped_mul_inpl!(h, MAGIC_SHIFT_1);
         ptr = ptr.offset(1);
     }
 
@@ -151,10 +159,11 @@ unsafe fn sfhash64(buffer: &[u8], len: u64) -> u64 {
 
     // mix and leave
     h ^= mix(v);
-    h *= MAGIC_SHIFT_4;
+    wrapped_mul_inpl!(h, MAGIC_SHIFT_4);
     return mix(h);
 }
 
+#[allow(dead_code)]
 fn sfhash64_signature() -> u32 {
     // hash keys of the form {}, {0}, {0,1}, {0,1,2}, ..., {0,1,2,...,254}
     let mut digest_bytes = Vec::<u8>::new();
