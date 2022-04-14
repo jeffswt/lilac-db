@@ -15,12 +15,13 @@ if __name__ == '__main__':
         ('MAGIC_SHIFT_2', 64),
         ('MAGIC_SHIFT_3', 64),
         ('MAGIC_SHIFT_4', 64),
+        ('MAGIC_SHIFT32_1', 32),
+        ('MAGIC_SHIFT32_2', 32),
+        ('MAGIC_SHIFT32_3', 32),
+        ('MAGIC_SHIFT32_4', 32),
         ('MAGIC_OFFSET_1', 64),
         ('MAGIC_OFFSET_2', 64),
-        ('MAGIC_MIX_1', 64),
-        ('MAGIC_MIX_2', 64),
-        ('MAGIC_MIX_3', 64),
-        ('MAGIC_MIX_4', 64),
+        ('MAGIC_MIX', 64),
     ]
     for name, bits in fields:
         print(f'const u{bits} {name} = {hex(genprime(bits))}ULL;')

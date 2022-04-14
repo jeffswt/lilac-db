@@ -10,6 +10,7 @@ extern "C" {
 #endif
 
 void sfhash64(const void *buf, int len, uint32_t seed, void *out);
+void sfhash32(const void *buf, int len, uint32_t seed, void *out);
 
 #ifdef __cplusplus
 }
