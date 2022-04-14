@@ -1,3 +1,4 @@
+mod sfhash;
 mod siphash;
 mod xxhash;
 
