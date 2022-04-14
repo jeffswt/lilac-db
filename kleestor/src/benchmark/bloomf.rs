@@ -3,6 +3,7 @@ use crate::bloom::fimpl::BloomFilterImpl;
 use crate::bloom::strategies::{SfHash64, SipHash, XxHash};
 use crate::bloom::HashStrategy;
 use crate::record::ByteStream;
+use std::fmt::format;
 use std::time::Instant;
 
 use super::BenchmarkResult;
@@ -39,10 +40,10 @@ where
         };
         // give a list of 256 samples
         let mut messages = vec![];
-        for _ in 0..256 {
+        for i in 0..256 {
             let mut message = vec![];
             for j in 0..length {
-                message.push((j & 0xff) as u8);
+                message.push(((i + j) & 0xff) as u8);
             }
             messages.push(ByteStream::from_vec(message));
         }
@@ -58,6 +59,35 @@ where
         perf_result.data.push(DataPoint {
             x: length as f64,
             y: scale as f64 / ((loop_time as f64) / 1.0e9),
+        });
+    }
+
+    // evaluate false positive rate
+    let iterations = 50;
+    let scale = 40000;
+
+    for itr in 0..iterations {
+        // load data
+        for i in 0..scale {
+            let counter = itr * scale + i;
+            let message = format!("Positive_{counter}_suffix!");
+            let message = &ByteStream::from_slice(message.as_bytes());
+            bf.insert(&message);
+        }
+        let mut fp_count = 0;
+        // count false positives
+        for i in 0..scale {
+            let counter = itr * scale + i;
+            let message = format!("Negative_{counter}_suffix!!");
+            let message = &ByteStream::from_slice(message.as_bytes());
+            if bf.query(&message) {
+                fp_count += 1;
+            }
+        }
+        // write data point
+        fprate_result.data.push(DataPoint {
+            x: ((itr + 1) * scale) as f64,
+            y: (fp_count as f64) / (scale as f64),
         });
     }
 
