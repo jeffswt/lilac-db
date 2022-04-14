@@ -77,6 +77,8 @@ macro_rules! match_bytes {
 }
 
 /// An sfHash64 implementation without seed intervention.
+///
+/// This algorithm is not portable between machines of different endiannesses.
 #[inline]
 unsafe fn sfhash64(buffer: &[u8], len: u64) -> u64 {
     let mut ptr = buffer.as_ptr() as *const u64;
@@ -151,4 +153,37 @@ unsafe fn sfhash64(buffer: &[u8], len: u64) -> u64 {
     h ^= mix(v);
     h *= MAGIC_SHIFT_4;
     return mix(h);
+}
+
+fn sfhash64_signature() -> u32 {
+    // hash keys of the form {}, {0}, {0,1}, {0,1,2}, ..., {0,1,2,...,254}
+    let mut digest_bytes = Vec::<u8>::new();
+    let mut message = Vec::<u8>::new();
+    for n in 0..=255 {
+        let digest = unsafe { sfhash64(&message, n) };
+        message.push(n as u8);
+        // push data in little-endian
+        digest_bytes.push(((digest >> 56) & 0xff) as u8);
+        digest_bytes.push(((digest >> 48) & 0xff) as u8);
+        digest_bytes.push(((digest >> 40) & 0xff) as u8);
+        digest_bytes.push(((digest >> 32) & 0xff) as u8);
+        digest_bytes.push(((digest >> 24) & 0xff) as u8);
+        digest_bytes.push(((digest >> 16) & 0xff) as u8);
+        digest_bytes.push(((digest >> 8) & 0xff) as u8);
+        digest_bytes.push(((digest >> 0) & 0xff) as u8);
+    }
+    // hash the generated 2048 bytes into another digest
+    let digest = unsafe { sfhash64(&digest_bytes, 2048) };
+    (digest ^ (digest >> 32)) as u32
+}
+
+#[cfg(test)]
+mod tests {
+    use super::sfhash64_signature;
+
+    #[test]
+    fn sfhash64_signature_valid() {
+        let sig = sfhash64_signature();
+        assert_eq!(sig, 0xf55ec779);
+    }
 }
