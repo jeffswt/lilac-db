@@ -153,6 +153,7 @@ void sfhash32(const void *buf, i32 len, u32 _seed, void *out) {
     // get rid of the excessive operations
     if (len < 32) {
         h = h3;
+
         while (ptr != end2) {
             v = *ptr;
             h ^= mix(v);
@@ -181,7 +182,7 @@ void sfhash32(const void *buf, i32 len, u32 _seed, void *out) {
     }
 
     const u64 *end1 = ptr + ((len >> 5) << 2);
-
+    
     if (ptr != end1) {
         u64 h2 = h3 + MAGIC_OFFSET_1,
             h1 = h2 + MAGIC_OFFSET_2,
@@ -199,6 +200,11 @@ void sfhash32(const void *buf, i32 len, u32 _seed, void *out) {
             v2 ^= v2 >> 23;
             v3 ^= v3 >> 23;
             v4 ^= v4 >> 23;
+            // v ^= v >> 47
+            v1 ^= v1 >> 47;
+            v2 ^= v2 >> 47;
+            v3 ^= v3 >> 47;
+            v4 ^= v4 >> 47;
             // h ^= v;
             h1 ^= v1;
             h2 ^= v2;
@@ -221,11 +227,6 @@ void sfhash32(const void *buf, i32 len, u32 _seed, void *out) {
             h2 = ((u64)h2_1 << 32) ^ h2_2,
             h3 = ((u64)h3_1 << 32) ^ h3_2,
             h4 = ((u64)h4_1 << 32) ^ h4_2,
-            // h ^= h >> 47
-            h1 ^= h1 >> 47;
-            h2 ^= h2 >> 47;
-            h3 ^= h3 >> 47;
-            h4 ^= h4 >> 47;
             // ptr++;
             ptr += 4;
         }
@@ -262,7 +263,7 @@ void sfhash32(const void *buf, i32 len, u32 _seed, void *out) {
 
     h ^= mix(v);
     h *= MAGIC_SHIFT_4;
-    h = mix(h);
 
-    *(u32*)out = h ^ (h >> 32);
+    u32 h_32 = h ^ (h >> 32);
+    *(u32*)out = h_32;
 }
