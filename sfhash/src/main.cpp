@@ -86,8 +86,8 @@ HashInfo g_hashes[] =
   { fasthash32,           32, 0xCE25265D, "FastHash32",  "FastHash32 for x64, 32-bit" },
   { fasthash64,           64, 0x03280FE7, "FastHash64",  "FastHash64 for x64, 64-bit" },
 
-  { sfhash64,             64, 0x7786C2AB, "sfHash64",    "SuperFastHash64 for x64, 64-bit" },
-  { sfhash32,             32, 0x25694E90, "sfHash32",    "SuperFastHash32 for x64, 32-bit" },
+  { sfhash64,             64, 0xF55EC779, "sfHash64",    "SuperFastHash64 for x64, 64-bit" },
+  { sfhash32,             32, 0x56ECF74D, "sfHash32",    "SuperFastHash32 for x64, 32-bit" },
 };
 
 HashInfo * findHash ( const char * name )

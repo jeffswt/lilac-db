@@ -35,7 +35,9 @@ static inline u64 rotate_right(u64 val, u64 digs) {
 void sfhash64(const void *buf, i32 len, u32 _seed, void *out) {
     const u64 *ptr = (const u64*)(buf);
     const u64 *end2 = ptr + (len >> 3);
-    u64 h3 = MAGIC_SEED ^ _seed ^ ((u64)_seed << 32) ^ (len * MAGIC_SHIFT_1);
+    u64 h3 = MAGIC_SEED ^ (len * MAGIC_SHIFT_1);
+    // // ignoring seed for performance
+    // u64 h3 = MAGIC_SEED ^ _seed ^ ((u64)_seed << 32) ^ (len * MAGIC_SHIFT_1);
     u64 h, v;
     
     // get rid of the excessive operations
@@ -147,7 +149,9 @@ void sfhash64(const void *buf, i32 len, u32 _seed, void *out) {
 void sfhash32(const void *buf, i32 len, u32 _seed, void *out) {
     const u64 *ptr = (const u64*)(buf);
     const u64 *end2 = ptr + (len >> 3);
-    u64 h3 = MAGIC_SEED ^ _seed ^ ((u64)_seed << 32) ^ (len * MAGIC_SHIFT_1);
+    u64 h3 = MAGIC_SEED ^ (len * MAGIC_SHIFT_1);
+    // // ignoring seed for performance
+    // u64 h3 = MAGIC_SEED ^ _seed ^ ((u64)_seed << 32) ^ (len * MAGIC_SHIFT_1);
     u64 h, v;
     
     // get rid of the excessive operations
