@@ -1,4 +1,5 @@
 mod bloomf;
+mod memtable;
 mod nstree;
 
 use json::{object, JsonValue};
@@ -80,6 +81,8 @@ impl BenchmarkManager {
         self.add(nstree::btreeunsafe_seq_rw::<7>());
         self.add(nstree::splay_rand_rw());
         self.add(nstree::splay_seq_rw());
+
+        self.add(memtable::run());
 
         self.add(bloomf::siphash_rp());
         self.add(bloomf::xxhash_rp());

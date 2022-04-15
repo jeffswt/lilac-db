@@ -1,11 +1,9 @@
-use crate::benchmark::DataPoint;
+use crate::benchmark::{BenchmarkResult, DataPoint};
 use crate::bloom::fimpl::BloomFilterImpl;
 use crate::bloom::strategies::{SfHash64, SipHash, XxHash};
 use crate::bloom::HashStrategy;
 use crate::record::ByteStream;
 use std::time::Instant;
-
-use super::BenchmarkResult;
 
 /// Run benchmarks on bloom filters, esp. their hash implementations.
 fn run<Hasher, const ML: usize, const K: usize>(
@@ -29,7 +27,9 @@ where
 
     // estimate hash performance on different key lengths
     let mut lengths: Vec<i64> = (0..=32).collect();
-    lengths.append(&mut vec![40, 48, 56, 64, 80, 96, 128, 256, 512, 1024, 2048, 4096]);
+    lengths.append(&mut vec![
+        40, 48, 56, 64, 80, 96, 128, 256, 512, 1024, 2048, 4096,
+    ]);
 
     for length in lengths {
         let scale = if length <= 32 {

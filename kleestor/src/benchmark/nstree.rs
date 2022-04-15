@@ -1,13 +1,11 @@
-use std::time::Instant;
-
+use crate::benchmark::{BenchmarkResult, DataPoint};
 use crate::memtable::btree::BTreeImpl;
 use crate::memtable::btree_builtin::BTreeBuiltin;
 use crate::memtable::btree_unsafe::BTreeUnsafe;
 use crate::memtable::rbtree::RBTree;
 use crate::memtable::splay::SplayTree;
 use crate::memtable::MemTable;
-
-use super::{BenchmarkResult, DataPoint};
+use std::time::Instant;
 
 enum TestMode {
     Random,
