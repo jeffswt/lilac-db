@@ -32,6 +32,7 @@ class CommitScope(enum.Enum):
     kleestor_memtable = "memtable"  # Memory-only part of storage engine
     kleestor_bloomfilter = "kbloomf"  # Bloom filter for storage engine
     kleestor_sfhash = "sfhash"  # super-fast hash algorithm for storage engine
+    kleestor_lsmtree = "lsmtree"  # log-structure-merge tree for storage engine
 
 
 @dataclasses.dataclass

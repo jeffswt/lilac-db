@@ -7,10 +7,6 @@ pub struct ByteStream {
 }
 
 impl ByteStream {
-    pub fn new() -> Self {
-        Self { data: vec![] }
-    }
-
     pub fn from_vec(bytes: Vec<u8>) -> Self {
         Self { data: bytes }
     }
