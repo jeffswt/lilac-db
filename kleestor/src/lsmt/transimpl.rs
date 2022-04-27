@@ -136,10 +136,11 @@ impl TransactionMgrImpl {
         }
     }
 
-    /// Write data to target entry after locking that resource.
+    /// Write data to target entry after locking that resource. It is safe to
+    /// call this in either write-only mode or read-write mode.
     ///
     /// Throws an error if an abort is required.
-    pub async unsafe fn write_and_lock(
+    pub async unsafe fn write(
         &mut self,
         trans: &mut Transaction,
         entry: &mut KvEntry,
