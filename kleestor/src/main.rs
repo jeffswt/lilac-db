@@ -10,6 +10,7 @@ mod bloom;
 mod lsmt;
 mod memtable;
 mod record;
+mod utils;
 
 fn main() {
     benchmark::BenchmarkManager::run("benchmark.txt");
