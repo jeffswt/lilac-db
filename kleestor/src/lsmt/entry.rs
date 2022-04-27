@@ -1,6 +1,5 @@
 use crate::record::ByteStream;
-use std::collections::VecDeque;
-use std::sync::Mutex;
+use crate::utils::futures::Mutex;
 
 /// A level-0 data record that is stored within memory.
 ///
