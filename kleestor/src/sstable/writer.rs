@@ -4,7 +4,6 @@ use crate::utils::varint::VarUint64;
 use std::fs::File;
 use std::io::{Result, Seek, SeekFrom, Write};
 use std::marker::PhantomData;
-use std::mem::MaybeUninit;
 
 use super::MetaBlockType;
 
@@ -30,7 +29,7 @@ where
         }
     }
 
-    pub fn write(&mut self, iter: &mut Iter) -> Result<()> {
+    pub fn write(&mut self, iter: Iter) -> Result<()> {
         // reset pointer
         self.handle.seek(SeekFrom::Start(0))?;
         let mut block_indices = Vec::<(MetaBlockType, usize)>::new();
@@ -50,19 +49,27 @@ where
         let mut last_key = the_null_key.as_ref();
 
         // start writing keys
-        let mut last_item: Pointer;
-        for item in iter {
+        let mut _last_item: Pointer;
+        let mut iter = iter.peekable();
+        while let Some(item) = iter.next() {
             // fetch values
             let k: &[u8] = unsafe { std::mem::transmute(item.key()) };
             let v: &[u8] = unsafe { std::mem::transmute(item.value()) };
+            let is_last_value = if let None = iter.peek() { true } else { false };
 
             // maintain bloom filter
             bloom.insert(&k);
 
             // compress index prefixes
             let mut common_len = 0_usize;
-            if offset > 0 && prev_block < min_block_size {
-                // perform compression
+            if offset == 0 || prev_block >= min_block_size || is_last_value {
+                // when offset is 0 (start block) or block is big enough
+                // or is the last block
+                // don't perform compression and save index position
+                indices.push(offset);
+                prev_block = 0;
+            } else {
+                // perform compression 
                 let l_ref = last_key;
                 let r_ref = k;
                 let min_len = std::cmp::min(l_ref.len(), r_ref.len());
@@ -70,11 +77,6 @@ where
                     common_len += 1;
                 }
                 prev_block += 1;
-            } else {
-                // when offset is 0 (start block) or block is big enough
-                // don't perform compression and save index position
-                indices.push(offset);
-                prev_block = 0;
             }
             last_key = k;
 
@@ -89,10 +91,9 @@ where
             offset += self.handle.write(v.as_ref())?;
 
             // keep last pointer alive
-            last_item = item;
+            _last_item = item;
         }
-        // largest key in run
-        indices.push(last_offset);
+        // largest key has been saved
 
         // write index block
         // starts with 1 counter and [counter] indices, all in varuint64
