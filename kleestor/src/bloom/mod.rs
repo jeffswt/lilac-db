@@ -2,6 +2,7 @@ pub mod fimpl;
 pub mod strategies;
 
 use crate::record::ByteStream;
+use self::{fimpl::BloomFilterImpl, strategies::SfHash64};
 
 /// A hash strategy that produces K positions for a bloom filter on a span of
 /// 2^ML slots in total.
@@ -11,3 +12,6 @@ where
 {
     fn hash(message: &ByteStream) -> [u32; K];
 }
+
+/// Default bloom filter constructor.
+pub type BloomFilter = BloomFilterImpl<SfHash64<24, 2>, 24, 2>;

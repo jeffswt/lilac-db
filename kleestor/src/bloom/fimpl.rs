@@ -1,6 +1,6 @@
+use crate::bloom::HashStrategy;
 use crate::record::ByteStream;
-
-use super::HashStrategy;
+use std::io::Write;
 
 /// Common implementation for bloom filters on different hash sizes and hash
 /// functions.
@@ -56,6 +56,21 @@ where
             }
         }
         return true;
+    }
+
+    /// Query actual size in bytes.
+    pub fn size(&self) -> usize {
+        1_usize << (ML - 3)
+    }
+
+    /// Get default size in bytes.
+    pub fn default_size() -> usize {
+        1_usize << (ML - 3)
+    }
+
+    /// Write bytes to disk.
+    pub fn write(&self, file: &mut std::fs::File) -> std::io::Result<usize> {
+        file.write(self.data.as_slice())
     }
 
     /// Shortcut for performing a hash action.
