@@ -13,11 +13,11 @@ where
 impl<const ML: usize, const K: usize> HashStrategy<ML, K> for SipHash<ML, K> {
     #[inline]
     #[allow(deprecated)]
-    fn hash(message: &ByteStream) -> [u32; K] {
+    fn hash(message: &[u8]) -> [u32; K] {
         assert!(ML * K <= 64, "sufficient bits for hashing");
 
         let mut hasher = SipHasher::new();
-        hasher.write(message.as_ref());
+        hasher.write(message);
         let mut finished = hasher.finish();
 
         let mut result = [0u32; K];

@@ -1,5 +1,4 @@
 use crate::bloom::HashStrategy;
-use crate::record::ByteStream;
 use std::intrinsics::rotate_right;
 use std::num::Wrapping;
 use std::ops::Shr;
@@ -14,10 +13,10 @@ where
 
 impl<const ML: usize, const K: usize> HashStrategy<ML, K> for SfHash64<ML, K> {
     #[inline]
-    fn hash(message: &ByteStream) -> [u32; K] {
+    fn hash(message: &[u8]) -> [u32; K] {
         assert!(ML * K <= 64, "sufficient bits for hashing");
 
-        let mut finished = unsafe { sfhash64(message.as_ref(), message.len() as u64) };
+        let mut finished = unsafe { sfhash64(message, message.len() as u64) };
 
         let mut result = [0u32; K];
         let mask: u64 = (1 << ML) - 1;

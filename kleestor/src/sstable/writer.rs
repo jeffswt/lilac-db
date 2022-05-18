@@ -4,6 +4,7 @@ use crate::utils::varint::VarUint64;
 use std::fs::File;
 use std::io::{Result, Seek, SeekFrom, Write};
 use std::marker::PhantomData;
+use std::mem::MaybeUninit;
 
 use super::MetaBlockType;
 
@@ -49,10 +50,11 @@ where
         let mut last_key = the_null_key.as_ref();
 
         // start writing keys
+        let mut last_item: Pointer;
         for item in iter {
             // fetch values
-            let k = item.key();
-            let v = item.value();
+            let k: &[u8] = unsafe { std::mem::transmute(item.key()) };
+            let v: &[u8] = unsafe { std::mem::transmute(item.value()) };
 
             // maintain bloom filter
             bloom.insert(&k);
@@ -85,6 +87,9 @@ where
             // write (compressed) key and value
             offset += self.handle.write(&k.as_ref()[common_len..])?;
             offset += self.handle.write(v.as_ref())?;
+
+            // keep last pointer alive
+            last_item = item;
         }
         // largest key in run
         indices.push(last_offset);

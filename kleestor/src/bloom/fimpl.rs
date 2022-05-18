@@ -39,8 +39,8 @@ where
     }
 
     /// Inserts key into bloom filter.
-    pub fn insert(&mut self, message: &ByteStream) -> () {
-        let positions = Self::hash(&message);
+    pub fn insert(&mut self, message: &[u8]) -> () {
+        let positions = Self::hash(message);
         // a simd optimization is not necessary here since memory fetch (we can
         // almost assure that `self.data[...]` misses) is far slower than
         // unwrapping that loop
@@ -54,8 +54,8 @@ where
     ///
     /// A `false` result indicates a definite 'not exist', while a `true` might
     /// inflict a false positive.
-    pub fn query(&self, message: &ByteStream) -> bool {
-        let positions = Self::hash(&message);
+    pub fn query(&self, message: &[u8]) -> bool {
+        let positions = Self::hash(message);
         // simd not required as like above
         for position in positions {
             let mask = 1u8 << (position & 0x07);
@@ -85,8 +85,8 @@ where
     ///
     /// Usage: `Self::hash(...)`.
     #[inline]
-    fn hash(message: &ByteStream) -> [u32; K] {
-        Hasher::hash(&message)
+    fn hash(message: &[u8]) -> [u32; K] {
+        Hasher::hash(message)
     }
 }
 
@@ -103,13 +103,13 @@ mod tests {
         for i in 0..98765 {
             let s = format!("test-string-{i}");
             let s = ByteStream::from_slice(s.as_bytes());
-            bf.insert(&s);
+            bf.insert(s.as_ref());
         }
         // test that there are no false negatives
         for i in 0..98765 {
             let s = format!("test-string-{i}");
             let s = ByteStream::from_slice(s.as_bytes());
-            let result = bf.query(&s);
+            let result = bf.query(s.as_ref());
             assert_ne!(result, false);
         }
     }

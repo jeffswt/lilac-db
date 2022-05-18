@@ -50,7 +50,7 @@ where
         let loop_time = Instant::now();
         let mut consumer = 0_u32;
         for i in 0..scale {
-            let result = Hasher::hash(&messages[(i & 0xff) as usize]);
+            let result = Hasher::hash(messages[(i & 0xff) as usize].as_ref());
             consumer ^= result[0];
         }
         let loop_time = loop_time.elapsed().as_nanos() + (consumer & 1) as u128;
@@ -70,16 +70,16 @@ where
         for i in 0..scale {
             let counter = itr * scale + i;
             let message = format!("Positive_{counter}_suffix!");
-            let message = &ByteStream::from_slice(message.as_bytes());
-            bf.insert(&message);
+            let message = ByteStream::from_slice(message.as_bytes());
+            bf.insert(message.as_ref());
         }
         let mut fp_count = 0;
         // count false positives
         for i in 0..scale {
             let counter = itr * scale + i;
             let message = format!("Negative_{counter}_suffix!!");
-            let message = &ByteStream::from_slice(message.as_bytes());
-            if bf.query(&message) {
+            let message = ByteStream::from_slice(message.as_bytes());
+            if bf.query(message.as_ref()) {
                 fp_count += 1;
             }
         }

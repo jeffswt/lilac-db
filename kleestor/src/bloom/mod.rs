@@ -10,7 +10,7 @@ pub trait HashStrategy<const ML: usize, const K: usize>
 where
     [(); K]: Sized,
 {
-    fn hash(message: &ByteStream) -> [u32; K];
+    fn hash(message: &[u8]) -> [u32; K];
 }
 
 /// Default bloom filter constructor.
