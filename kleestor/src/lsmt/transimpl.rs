@@ -54,6 +54,7 @@ pub struct Transaction {
 }
 
 /// State of the transaction.
+#[allow(dead_code)]
 #[derive(PartialEq, Eq, Debug)]
 pub enum TransactionState {
     /// Locking resources in premature.

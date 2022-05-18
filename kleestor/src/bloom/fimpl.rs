@@ -30,6 +30,14 @@ where
         }
     }
 
+    /// Creates bloom filter from memory slice.
+    pub fn from_slice(region: &[u8]) -> Self {
+        let region: [u8; 1 << (ML - 3)] = region.try_into().expect("incorrect slice length");
+        Self {
+            data: Box::from(region),
+        }
+    }
+
     /// Inserts key into bloom filter.
     pub fn insert(&mut self, message: &ByteStream) -> () {
         let positions = Self::hash(&message);
