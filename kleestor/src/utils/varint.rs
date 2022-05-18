@@ -124,7 +124,7 @@ impl VarUint64 {
             _ => unreachable!(),
         }
 
-        Ok(((len + 1) as usize, result))
+        Ok(((len + 2) as usize, result))
     }
 
     /// Read a varuint64 value from a given [`ptr`] with up to [`length`] bytes
