@@ -63,8 +63,8 @@ where
                 // perform compression
                 let l_ref = last_key.as_ref();
                 let r_ref = k.as_ref();
-                let max_len = std::cmp::max(last_key.len(), k.len());
-                while common_len < max_len && l_ref[common_len] == r_ref[common_len] {
+                let min_len = std::cmp::min(last_key.len(), k.len());
+                while common_len < min_len && l_ref[common_len] == r_ref[common_len] {
                     common_len += 1;
                 }
                 prev_block += 1;
@@ -74,7 +74,7 @@ where
                 indices.push(offset);
                 prev_block = 0;
             }
-            last_key = unsafe { &*(v as *const ByteStream) };
+            last_key = unsafe { &*(k as *const ByteStream) };
 
             // write lengths
             last_offset = offset;
