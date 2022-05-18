@@ -3,6 +3,7 @@ use crate::record::{ByteStream, KvPointer};
 use crate::utils::varint::VarUint64;
 use std::fs::File;
 use std::io::{Result, Seek, SeekFrom, Write};
+use std::marker::PhantomData;
 
 use super::MetaBlockType;
 
@@ -13,7 +14,7 @@ where
 {
     handle: File,
 
-    _marker: Iter,
+    _marker: PhantomData<Iter>,
 }
 
 impl<Pointer, Iter> SSTableWriter<Pointer, Iter>
@@ -21,6 +22,13 @@ where
     Pointer: KvPointer + Sized,
     Iter: Iterator<Item = Pointer>,
 {
+    pub fn new(handle: File) -> Self {
+        Self {
+            handle,
+            _marker: PhantomData,
+        }
+    }
+
     pub fn write(&mut self, iter: &mut Iter) -> Result<()> {
         // reset pointer
         self.handle.seek(SeekFrom::Start(0))?;

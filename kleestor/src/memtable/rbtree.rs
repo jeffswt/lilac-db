@@ -20,7 +20,7 @@ pub struct RBTree<K: Ord + Eq, V> {
 /// Additional (special) implementations for RB tree.
 impl RBTree<ByteStream, ByteStream> {
     /// Accesses iterator at `table[key] -> value`.
-    fn get_iter(&mut self, key: &ByteStream) -> Option<RBTreeIterator> {
+    pub fn get_iter(&mut self, key: &ByteStream) -> Option<RBTreeIterator> {
         unsafe {
             let ptr = self.access(key);
             if ptr == ptr::null_mut() {
@@ -31,7 +31,7 @@ impl RBTree<ByteStream, ByteStream> {
     }
 
     /// Access full-scan iterator.
-    fn iter_mut(&mut self) -> Option<RBTreeIterator> {
+    pub fn iter_mut(&mut self) -> Option<RBTreeIterator> {
         unsafe {
             let mut ptr = self.root;
             while ptr != ptr::null_mut() && (*ptr).child[0] != ptr::null_mut() {

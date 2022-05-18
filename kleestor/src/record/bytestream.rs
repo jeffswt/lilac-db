@@ -88,7 +88,7 @@ impl PartialOrd for ByteStream {
         }
 
         // compare the rest of the bytes
-        for j in i - 16..n {
+        for j in i - 16..len {
             let left = self.data[j];
             let right = other.data[j];
             if left == right {
