@@ -46,7 +46,7 @@ where
 
         // index prefix compression
         let the_null_key = ByteStream::from_vec(vec![]);
-        let mut last_key = &the_null_key;
+        let mut last_key = the_null_key.as_ref();
 
         // start writing keys
         for item in iter {
@@ -61,9 +61,9 @@ where
             let mut common_len = 0_usize;
             if offset > 0 && prev_block < min_block_size {
                 // perform compression
-                let l_ref = last_key.as_ref();
-                let r_ref = k.as_ref();
-                let min_len = std::cmp::min(last_key.len(), k.len());
+                let l_ref = last_key;
+                let r_ref = k;
+                let min_len = std::cmp::min(l_ref.len(), r_ref.len());
                 while common_len < min_len && l_ref[common_len] == r_ref[common_len] {
                     common_len += 1;
                 }
@@ -74,7 +74,7 @@ where
                 indices.push(offset);
                 prev_block = 0;
             }
-            last_key = unsafe { &*(k as *const ByteStream) };
+            last_key = k;
 
             // write lengths
             last_offset = offset;

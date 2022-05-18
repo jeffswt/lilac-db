@@ -92,13 +92,13 @@ pub struct RBTreePointer {
 
 impl KvPointer for RBTreePointer {
     /// Get key where iterator points to.
-    fn key(&self) -> &ByteStream {
-        unsafe { &(*self._node).key }
+    fn key(&self) -> &[u8] {
+        unsafe { (*self._node).key.as_ref() }
     }
 
     /// Gets a static reference to the pointing value.
-    fn value(&self) -> &ByteStream {
-        unsafe { &(*self._node).value }
+    fn value(&self) -> &[u8] {
+        unsafe { &(*self._node).value.as_ref() }
     }
 
     /// Gets a mutable reference to the pointing value.
