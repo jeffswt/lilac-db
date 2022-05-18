@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::{self, Write};
+use std::io::{self, Error, ErrorKind, Result, Write};
 use std::mem::MaybeUninit;
 
 /// Stores unsigned integer values of up to 64 bits (2^64) in up to 9 bytes.
@@ -47,17 +47,15 @@ use std::mem::MaybeUninit;
 pub struct VarUint64;
 
 impl VarUint64 {
-    /// Read a varuint64 value from a given [`ptr`] with up to [`length`] bytes
-    /// remaining in buffer. Reading past [`ptr + length`] (inclusive) would
-    /// trigger a read error.
-    pub fn read(ptr: &[u8], length: usize) -> Result<u64, ()> {
+    /// Same as `read` but also returns read bytes.
+    pub fn read_offset(ptr: &[u8], length: usize) -> Result<(usize, u64)> {
         // read byte #0
         if length == 0 {
-            return Err(());
+            return Err(Error::new(ErrorKind::InvalidData, "out of bounds"));
         }
         let mut result = ptr[0] as u64;
         match result & 0b_10000000 {
-            0 => return Ok(result),
+            0 => return Ok((1, result)),
             _ => result &= 0b_01111111,
         };
 
@@ -70,7 +68,7 @@ impl VarUint64 {
         // also since a length read often precedes a data read, the overhead
         //     here really isn't a big issue
         if (length as u64) < 2 + len {
-            return Err(());
+            return Err(Error::new(ErrorKind::InvalidData, "out of bounds"));
         }
         match len {
             0 => {}
@@ -126,7 +124,24 @@ impl VarUint64 {
             _ => unreachable!(),
         }
 
-        Ok(result)
+        Ok(((len + 1) as usize, result))
+    }
+
+    /// Read a varuint64 value from a given [`ptr`] with up to [`length`] bytes
+    /// remaining in buffer. Reading past [`ptr + length`] (inclusive) would
+    /// trigger a read error.
+    pub fn read(ptr: &[u8], length: usize) -> Result<u64> {
+        let (len, value) = Self::read_offset(ptr, length)?;
+        Ok(value)
+    }
+
+    /// Same with `read`, but actually adds an offset value for you.
+    ///
+    /// Also ignores the errors.
+    pub fn read_and_seek(ptr: &[u8], offset: &mut usize, length: usize) -> Result<u64> {
+        let (len, value) = Self::read_offset(ptr, length)?;
+        *offset += len;
+        Ok(value)
     }
 
     /// Converts an unsigned 64-bit integer into a varuint64 char array,
@@ -202,7 +217,7 @@ impl VarUint64 {
 
     /// Writes an unsigned 64-bit integer into a file handle in the format of
     /// varuint64, returning how many bytes were written.
-    pub fn write(value: u64, mut file: File) -> io::Result<usize> {
+    pub fn write(value: u64, file: &mut File) -> io::Result<usize> {
         let mut buffer: MaybeUninit<[u8; 9]> = MaybeUninit::uninit();
         let array = unsafe { buffer.assume_init_mut() };
         let len = Self::as_slice(value, array);
@@ -216,11 +231,11 @@ pub mod tests {
 
     fn works(value: u64) -> () {
         let mut buffer: [u8; 9] = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-        let len = VarUint64::as_slice(value, &mut buffer);
+        VarUint64::as_slice(value, &mut buffer);
 
         match VarUint64::read(&buffer, 9) {
             Ok(resolved) => assert_eq!(resolved, value),
-            Err(()) => panic!("varuint64 0x{value:x} failed to decode"),
+            Err(_) => panic!("varuint64 0x{value:x} failed to decode"),
         };
     }
 
