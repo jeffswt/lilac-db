@@ -21,6 +21,12 @@ impl SSTableReader {
         // unzip file to a memory map
         let region = unsafe { MmapOptions::new().map(&handle)? };
 
+        // validate magic
+        let magic = Self::read_u64(&region[region.len() - 8..]);
+        if magic != 0x1145_1419_1981_fee1_u64 {
+            return Err(Error::new(ErrorKind::InvalidData, "invalid magic"));
+        }
+
         // extract header block
         let mut offset = Self::read_u64(&region[region.len() - 8..]) as usize;
         let header_block_items = Self::read_varu64(&region, &mut offset)?;

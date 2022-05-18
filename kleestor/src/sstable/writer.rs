@@ -37,8 +37,8 @@ where
         // assure index distance
         let mut offset = 0_usize;
         let mut last_offset = offset; // offset of the last key
-        let mut prev_block = offset;
-        let min_block_size = 2048_usize; // 2kb should make most keys fit well
+        let mut prev_block = 0;
+        let min_block_size = 50; // save index for every 50 keys
         let mut indices = Vec::<usize>::new();
 
         // prepare bloom filter
@@ -59,7 +59,7 @@ where
 
             // compress index prefixes
             let mut common_len = 0_usize;
-            if offset > 0 && offset - prev_block < min_block_size {
+            if offset > 0 && prev_block < min_block_size {
                 // perform compression
                 let l_ref = last_key.as_ref();
                 let r_ref = k.as_ref();
@@ -67,11 +67,12 @@ where
                 while common_len < max_len && l_ref[common_len] == r_ref[common_len] {
                     common_len += 1;
                 }
+                prev_block += 1;
             } else {
                 // when offset is 0 (start block) or block is big enough
                 // don't perform compression and save index position
                 indices.push(offset);
-                prev_block = offset;
+                prev_block = 0;
             }
             last_key = unsafe { &*(v as *const ByteStream) };
 
@@ -118,6 +119,9 @@ where
 
         // a header block offset in the end
         self.write_u64(offset as u64)?;
+
+        // a magic in the end
+        self.write_u64(0x1145_1419_1981_fee1_u64)?;
 
         // all done
         Ok(())
