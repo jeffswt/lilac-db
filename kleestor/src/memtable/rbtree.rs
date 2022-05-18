@@ -1,6 +1,8 @@
 use crate::memtable::MemTable;
+use crate::record::{ByteStream, KvPointer};
+use crate::utils;
 use std::alloc::{alloc, dealloc, Layout};
-use std::ptr;
+use std::ptr::{self, null_mut};
 
 /// A thread-safe implementation of B tree, which utilizes mutex locks on the
 /// nodes to provide thread-safety.
@@ -13,6 +15,94 @@ pub struct RBTree<K: Ord + Eq, V> {
     /// A total of `length` nodes are in this tree.
     #[allow(dead_code)]
     length: usize,
+}
+
+/// Additional (special) implementations for RB tree.
+impl RBTree<ByteStream, ByteStream> {
+    /// Accesses iterator at `table[key] -> value`.
+    fn get_iter(&mut self, key: &ByteStream) -> Option<RBTreeIterator> {
+        unsafe {
+            let ptr = self.access(key);
+            if ptr == ptr::null_mut() {
+                return None;
+            }
+            Some(RBTreeIterator { node: ptr })
+        }
+    }
+
+    /// Access full-scan iterator.
+    fn iter_mut(&mut self) -> Option<RBTreeIterator> {
+        unsafe {
+            let mut ptr = self.root;
+            while ptr != ptr::null_mut() && (*ptr).child[0] != ptr::null_mut() {
+                ptr = (*ptr).child[0];
+            }
+            Some(RBTreeIterator { node: ptr })
+        }
+    }
+}
+
+/// Tree node iterator manager.
+pub struct RBTreeIterator {
+    /// Pointer to next item.
+    node: *mut Node<ByteStream, ByteStream>,
+}
+
+impl Iterator for RBTreeIterator {
+    type Item = RBTreePointer;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.node == null_mut() {
+            return None;
+        }
+
+        // find successor node (p is non-null)
+        let current_result = self.node;
+        unsafe {
+            let mut p = self.node;
+            // has right child, find leftmost descendant
+            if (*p).child[1] != null_mut() {
+                p = (*p).child[1];
+                while (*p).child[0] != null_mut() {
+                    p = (*p).child[0];
+                }
+                self.node = p;
+            }
+            // traceback until p is a left child
+            let mut q = (*p).parent;
+            while q != null_mut() && p == (*q).child[1] {
+                p = q;
+                q = (*p).parent;
+            }
+            self.node = q;
+        }
+        Some(Self::Item {
+            _node: current_result,
+        })
+    }
+}
+
+/// Tree iterator (pointer) interface.
+pub struct RBTreePointer {
+    /// Private pointer to current node.
+    _node: *mut Node<ByteStream, ByteStream>,
+}
+
+impl KvPointer for RBTreePointer {
+    /// Get key where iterator points to.
+    fn key(&self) -> &ByteStream {
+        unsafe { &(*self._node).key }
+    }
+
+    /// Gets a static reference to the pointing value.
+    fn value(&self) -> &ByteStream {
+        unsafe { &(*self._node).value }
+    }
+
+    /// Gets a mutable reference to the pointing value.
+    fn value_mut(&self) -> &mut ByteStream {
+        unsafe { utils::const_as_mut(&(*self._node).value) }
+    }
 }
 
 /// Access points for universal trait.
