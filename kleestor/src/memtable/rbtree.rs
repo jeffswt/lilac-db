@@ -67,15 +67,17 @@ impl Iterator for RBTreeIterator {
                     p = (*p).child[0];
                 }
                 self.node = p;
+            } else {
+                // traceback until p is a left child
+                let mut q = (*p).parent;
+                while q != null_mut() && p == (*q).child[1] {
+                    p = q;
+                    q = (*p).parent;
+                }
+                self.node = q;
             }
-            // traceback until p is a left child
-            let mut q = (*p).parent;
-            while q != null_mut() && p == (*q).child[1] {
-                p = q;
-                q = (*p).parent;
-            }
-            self.node = q;
         }
+
         Some(Self::Item {
             _node: current_result,
         })
