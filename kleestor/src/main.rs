@@ -11,6 +11,7 @@ mod bloom;
 mod lsmt;
 mod memtable;
 mod record;
+mod sstable;
 mod utils;
 
 fn main() {
