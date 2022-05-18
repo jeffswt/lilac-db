@@ -28,17 +28,17 @@ impl SSTableReader {
         }
 
         // extract header block
-        let mut offset = Self::read_u64(&region[region.len() - 8..]) as usize;
+        let mut offset = Self::read_u64(&region[region.len() - 16..]) as usize;
         let header_block_items = Self::read_varu64(&region, &mut offset)?;
 
         let mut header_block = BTreeMap::<MetaBlockType, usize>::new();
-        for i in 0..header_block_items {
+        for _ in 0..header_block_items {
             let block_type = Self::read_varu64(&region, &mut offset)?;
             let indice = Self::read_varu64(&region, &mut offset)?;
             let block_type = match block_type {
                 1 => MetaBlockType::Index,
                 2 => MetaBlockType::BloomFilter,
-                _ => panic!("invalid metablock type"),
+                _ => return Err(Error::new(ErrorKind::InvalidData, "invalid metablock type")),
             };
             header_block.insert(block_type, indice as usize);
         }
@@ -71,16 +71,16 @@ impl SSTableReader {
         let mut indices = Vec::<usize>::new();
         let mut keys = Vec::<ByteStream>::new();
 
-        for i in 0..len {
+        for _ in 0..len {
             let indice = Self::read_varu64(region, &mut offset)?;
             indices.push(indice as usize);
         }
 
         // scan database for keys
-        for indice in indices {
-            let k_len = Self::read_varu64(region, &mut offset)? as usize;
-            let common_len = Self::read_varu64(region, &mut offset)?;
-            let v_len = Self::read_varu64(region, &mut offset)?;
+        for mut indice in indices {
+            let k_len = Self::read_varu64(region, &mut indice)? as usize;
+            let common_len = Self::read_varu64(region, &mut indice)?;
+            let _v_len = Self::read_varu64(region, &mut indice)?;
 
             // you shouldn't index a compressed key
             if common_len != 0 {
@@ -91,8 +91,9 @@ impl SSTableReader {
             }
 
             // read key and send it away
-            let key = &region[offset..offset + k_len];
+            let key = &region[indice..indice + k_len];
             let key = ByteStream::from_slice(key);
+            let x = String::from_utf8(key.as_ref().to_vec()).unwrap();
             keys.push(key);
         }
         Ok(keys)

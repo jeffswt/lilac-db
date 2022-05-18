@@ -1,5 +1,4 @@
 use crate::bloom::HashStrategy;
-use crate::record::ByteStream;
 use std::io::Write;
 
 /// Common implementation for bloom filters on different hash sizes and hash
@@ -32,10 +31,9 @@ where
 
     /// Creates bloom filter from memory slice.
     pub fn from_slice(region: &[u8]) -> Self {
-        let region: [u8; 1 << (ML - 3)] = region.try_into().expect("incorrect slice length");
-        Self {
-            data: Box::from(region),
-        }
+        let mut bloom = Self::new();
+        bloom.data.copy_from_slice(&region[0..1 << (ML - 3)]);
+        bloom
     }
 
     /// Inserts key into bloom filter.
