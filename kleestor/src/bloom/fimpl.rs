@@ -1,5 +1,5 @@
 use crate::bloom::HashStrategy;
-use std::io::Write;
+use std::{io::Write, marker::PhantomData};
 
 /// Common implementation for bloom filters on different hash sizes and hash
 /// functions.
@@ -9,10 +9,11 @@ use std::io::Write;
 pub struct BloomFilterImpl<Hasher, const ML: usize, const K: usize>
 where
     [(); K]: Sized,
-    [(); 1 << (ML - 3)]: Sized,
     Hasher: HashStrategy<ML, K>,
 {
-    data: Box<[u8; 1 << (ML - 3)]>,
+    data: Vec<u8>,
+
+    _marker: PhantomData<Hasher>,
 }
 
 /// The implementation is guaranteed to be endian-safe.
@@ -24,8 +25,13 @@ where
 {
     /// Creates new empty bloom filter.
     pub fn new() -> Self {
+        let capacity = Self::default_size();
+        let mut data = Vec::<u8>::with_capacity(capacity);
+        data.resize(capacity, 0_u8);
+
         Self {
-            data: Box::from([0u8; 1 << (ML - 3)]),
+            data,
+            _marker: PhantomData,
         }
     }
 
@@ -44,7 +50,7 @@ where
         // unwrapping that loop
         for position in positions {
             let mask = 1u8 << (position & 0x07);
-            self.data.as_mut()[(position >> 3) as usize] |= mask;
+            self.data[(position >> 3) as usize] |= mask;
         }
     }
 
@@ -57,7 +63,7 @@ where
         // simd not required as like above
         for position in positions {
             let mask = 1u8 << (position & 0x07);
-            if self.data.as_ref()[(position >> 3) as usize] & mask == 0u8 {
+            if self.data[(position >> 3) as usize] & mask == 0u8 {
                 return false;
             }
         }
