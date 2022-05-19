@@ -37,7 +37,6 @@ where
 
         // assure index distance
         let mut offset = 0_usize;
-        let mut last_offset = offset; // offset of the last key
         let mut prev_block = 0;
         let min_block_size = 50; // save index for every 50 keys
         let mut indices = Vec::<usize>::new();
@@ -82,7 +81,6 @@ where
             last_key = k;
 
             // write lengths
-            last_offset = offset;
             offset += VarUint64::write(k.len() as u64, &mut self.handle)?;
             offset += VarUint64::write(common_len as u64, &mut self.handle)?;
             offset += VarUint64::write(v.len() as u64, &mut self.handle)?;

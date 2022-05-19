@@ -1,5 +1,5 @@
-use crate::lsmt::entry::{KvData, KvEntry};
-use crate::record::ByteStream;
+use crate::lsmt::entry::KvEntry;
+use crate::record::{ByteStream, KvData};
 use crate::utils::const_as_mut;
 use crate::utils::futures::{Mutex, Notify};
 use std::cmp::max;
