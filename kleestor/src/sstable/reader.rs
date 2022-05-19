@@ -81,6 +81,7 @@ impl SSTableReader {
             let k_len = Self::read_varu64(region, &mut indice)? as usize;
             let common_len = Self::read_varu64(region, &mut indice)?;
             let _v_len = Self::read_varu64(region, &mut indice)?;
+            let _flags = Self::read_varu64(region, &mut indice)?;
 
             // you shouldn't index a compressed key
             if common_len != 0 {
@@ -93,7 +94,6 @@ impl SSTableReader {
             // read key and send it away
             let key = &region[indice..indice + k_len];
             let key = ByteStream::from_slice(key);
-            let x = String::from_utf8(key.as_ref().to_vec()).unwrap();
             keys.push(key);
         }
         Ok(keys)

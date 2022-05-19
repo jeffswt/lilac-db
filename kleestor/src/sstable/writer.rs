@@ -1,5 +1,5 @@
 use crate::bloom::BloomFilter;
-use crate::record::{ByteStream, KvPointer};
+use crate::record::{ByteStream, KvDataRef, KvPointer};
 use crate::utils::varint::VarUint64;
 use std::fs::File;
 use std::io::{Result, Seek, SeekFrom, Write};
@@ -54,10 +54,17 @@ where
         while let Some(item) = iter.next() {
             // fetch values
             let k: &[u8] = unsafe { std::mem::transmute(item.key()) };
-            let v: &[u8] = unsafe { std::mem::transmute(item.value()) };
-            let is_last_value = if let None = iter.peek() { true } else { false };
+            let v: KvDataRef = unsafe { std::mem::transmute(item.value()) };
+
+            // skip cached values
+            match &v {
+                KvDataRef::Tombstone { cached: true, .. } => continue,
+                KvDataRef::Value { cached: true, .. } => continue,
+                _ => (),
+            };
 
             // maintain bloom filter
+            let is_last_value = if let None = iter.peek() { true } else { false };
             bloom.insert(&k);
 
             // compress index prefixes
@@ -69,7 +76,7 @@ where
                 indices.push(offset);
                 prev_block = 0;
             } else {
-                // perform compression 
+                // perform compression
                 let l_ref = last_key;
                 let r_ref = k;
                 let min_len = std::cmp::min(l_ref.len(), r_ref.len());
@@ -80,14 +87,8 @@ where
             }
             last_key = k;
 
-            // write lengths
-            offset += VarUint64::write(k.len() as u64, &mut self.handle)?;
-            offset += VarUint64::write(common_len as u64, &mut self.handle)?;
-            offset += VarUint64::write(v.len() as u64, &mut self.handle)?;
-
-            // write (compressed) key and value
-            offset += self.handle.write(&k.as_ref()[common_len..])?;
-            offset += self.handle.write(v.as_ref())?;
+            // write key
+            self.write_kv_pair(&mut offset, k, common_len, &v)?;
 
             // keep last pointer alive
             _last_item = item;
@@ -137,6 +138,44 @@ where
         Ok(())
     }
 
+    // writes key-value pair
+    fn write_kv_pair(
+        &mut self,
+        offset: &mut usize,
+        k: &[u8],
+        k_common_len: usize,
+        v: &KvDataRef,
+    ) -> Result<()> {
+        match &v {
+            KvDataRef::Tombstone { .. } => {
+                // write lengths
+                *offset += VarUint64::write(k.len() as u64, &mut self.handle)?;
+                *offset += VarUint64::write(k_common_len as u64, &mut self.handle)?;
+                *offset += VarUint64::write(0_u64, &mut self.handle)?;
+
+                // write flag
+                *offset += VarUint64::write(0b00000001_u8 as u64, &mut self.handle)?;
+
+                // write (compressed) key
+                *offset += self.handle.write(&k.as_ref()[k_common_len..])?;
+            },
+            KvDataRef::Value { value, .. } => {
+                // write lengths
+                *offset += VarUint64::write(k.len() as u64, &mut self.handle)?;
+                *offset += VarUint64::write(k_common_len as u64, &mut self.handle)?;
+                *offset += VarUint64::write(value.len() as u64, &mut self.handle)?;
+
+                // write flag
+                *offset += VarUint64::write(0b00000000_u8 as u64, &mut self.handle)?;
+
+                // write (compressed) key and value
+                *offset += self.handle.write(&k.as_ref()[k_common_len..])?;
+                *offset += self.handle.write(value)?;
+            },
+        };
+
+        Ok(())
+    }
     // writes uint64 value
     fn write_u64(&mut self, value: u64) -> Result<usize> {
         self.handle.write(&[
