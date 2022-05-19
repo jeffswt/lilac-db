@@ -29,6 +29,7 @@ where
         }
     }
 
+    #[allow(unused_assignments)]
     pub fn write(&mut self, iter: Iter) -> Result<()> {
         // reset pointer
         self.handle.seek(SeekFrom::Start(0))?;
@@ -94,6 +95,11 @@ where
             _last_item = item;
         }
         // largest key has been saved
+
+        // write empty key marking end of data section
+        offset += VarUint64::write(0_u64, &mut self.handle)?;
+        offset += VarUint64::write(0_u64, &mut self.handle)?;
+        offset += VarUint64::write(0_u64, &mut self.handle)?;
 
         // write index block
         // starts with 1 counter and [counter] indices, all in varuint64
