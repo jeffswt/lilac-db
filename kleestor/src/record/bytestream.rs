@@ -22,15 +22,11 @@ impl ByteStream {
     pub fn len(&self) -> usize {
         self.data.len()
     }
-}
 
-impl PartialEq for ByteStream {
-    /// Compare strings against each other using SIMD.
-    ///
-    /// Priority is guaranteed over `partial_cmp`.
-    fn eq(&self, other: &Self) -> bool {
+    /// Compare equality against another reference using SIMD.
+    pub fn ref_eq(&self, other: &[u8]) -> bool {
         let n = self.data.len();
-        let m = other.data.len();
+        let m = other.len();
 
         if n != m {
             return false;
@@ -40,7 +36,7 @@ impl PartialEq for ByteStream {
         let mut i = 16;
         while i < n {
             let left: Simd<u8, 16> = Simd::from_slice(&self.data[i - 16..i]);
-            let right: Simd<u8, 16> = Simd::from_slice(&other.data[i - 16..i]);
+            let right: Simd<u8, 16> = Simd::from_slice(&other[i - 16..i]);
             if left != right {
                 return false;
             }
@@ -49,25 +45,24 @@ impl PartialEq for ByteStream {
 
         // compare the rest of the bytes
         for j in i - 16..n {
-            if self.data[j] != other.data[j] {
+            if self.data[j] != other[j] {
                 return false;
             }
         }
         return true;
     }
-}
 
-impl PartialOrd for ByteStream {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+    /// Compare against another reference using SIMD.
+    pub fn ref_partial_cmp(&self, other: &[u8]) -> Option<Ordering> {
         let n = self.data.len();
-        let m = other.data.len();
+        let m = other.len();
         let len = min(n, m);
 
         // compare data in parallel
         let mut i = 16;
         while i < len {
             let left: Simd<u8, 16> = Simd::from_slice(&self.data[i - 16..i]);
-            let right: Simd<u8, 16> = Simd::from_slice(&other.data[i - 16..i]);
+            let right: Simd<u8, 16> = Simd::from_slice(&other[i - 16..i]);
             if left == right {
                 i += 16;
                 continue;
@@ -75,7 +70,7 @@ impl PartialOrd for ByteStream {
             // compare for differences
             for j in i - 16..i {
                 let left = self.data[j];
-                let right = other.data[j];
+                let right = other[j];
                 if left == right {
                     continue;
                 } else if left < right {
@@ -90,7 +85,7 @@ impl PartialOrd for ByteStream {
         // compare the rest of the bytes
         for j in i - 16..len {
             let left = self.data[j];
-            let right = other.data[j];
+            let right = other[j];
             if left == right {
                 continue;
             } else if left < right {
@@ -102,6 +97,21 @@ impl PartialOrd for ByteStream {
 
         // whichever longer is greater
         n.partial_cmp(&m)
+    }
+}
+
+impl PartialEq for ByteStream {
+    /// Compare strings against each other using SIMD.
+    ///
+    /// Priority is guaranteed over `partial_cmp`.
+    fn eq(&self, other: &Self) -> bool {
+        self.ref_eq(other.as_ref())
+    }
+}
+
+impl PartialOrd for ByteStream {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.ref_partial_cmp(other.as_ref())
     }
 }
 
