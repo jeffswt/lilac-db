@@ -8,3 +8,9 @@ pub enum KvData {
     /// The record contains a key-value pair.
     Value { cached: bool, value: ByteStream },
 }
+
+/// Reference to `KvData`.
+pub enum KvDataRef<'a> {
+    Tombstone { cached: bool },
+    Value { cached: bool, value: &'a [u8] },
+}

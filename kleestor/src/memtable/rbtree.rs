@@ -1,5 +1,5 @@
 use crate::memtable::MemTable;
-use crate::record::{ByteStream, KvPointer};
+use crate::record::{ByteStream, KvData, KvDataRef, KvPointer};
 use crate::utils;
 use std::alloc::{alloc, dealloc, Layout};
 use std::ptr::{self, null_mut};
@@ -18,7 +18,7 @@ pub struct RBTree<K: Ord + Eq, V> {
 }
 
 /// Additional (special) implementations for RB tree.
-impl RBTree<ByteStream, ByteStream> {
+impl RBTree<ByteStream, KvData> {
     /// Accesses iterator at `table[key] -> value`.
     pub fn get_iter(&mut self, key: &ByteStream) -> Option<RBTreeIterator> {
         unsafe {
@@ -45,7 +45,7 @@ impl RBTree<ByteStream, ByteStream> {
 /// Tree node iterator manager.
 pub struct RBTreeIterator {
     /// Pointer to next item.
-    node: *mut Node<ByteStream, ByteStream>,
+    node: *mut Node<ByteStream, KvData>,
 }
 
 impl Iterator for RBTreeIterator {
@@ -87,7 +87,7 @@ impl Iterator for RBTreeIterator {
 /// Tree iterator (pointer) interface.
 pub struct RBTreePointer {
     /// Private pointer to current node.
-    _node: *mut Node<ByteStream, ByteStream>,
+    _node: *mut Node<ByteStream, KvData>,
 }
 
 impl KvPointer for RBTreePointer {
@@ -96,13 +96,18 @@ impl KvPointer for RBTreePointer {
         unsafe { (*self._node).key.as_ref() }
     }
 
-    /// Gets a static reference to the pointing value.
-    fn value(&self) -> &[u8] {
-        unsafe { &(*self._node).value.as_ref() }
+    fn value(&self) -> KvDataRef {
+        let value = unsafe { &(*self._node).value };
+        match value {
+            KvData::Tombstone { cached } => KvDataRef::Tombstone { cached: *cached },
+            KvData::Value { cached, value } => KvDataRef::Value {
+                cached: *cached,
+                value: value.as_ref(),
+            },
+        }
     }
 
-    /// Gets a mutable reference to the pointing value.
-    fn value_mut(&self) -> &mut ByteStream {
+    fn value_mut(&self) -> &mut KvData {
         unsafe { utils::const_as_mut(&(*self._node).value) }
     }
 }
