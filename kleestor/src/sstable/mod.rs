@@ -41,11 +41,9 @@ mod tests {
         let mut _file = std::fs::File::create(&tmp_dir).unwrap();
         let mut table = SSTableWriter::new(_file);
         table.write(map.iter_mut().unwrap()).unwrap();
-        drop(table);
 
         // read memtable
         let mut _file = std::fs::File::open(&tmp_dir).unwrap();
         let mut _table = SSTableReader::new(_file);
-        println!("fucked up");
     }
 }

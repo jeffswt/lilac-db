@@ -32,6 +32,13 @@ impl ByteStream {
             return false;
         }
 
+        // // compare the rest of the bytes
+        // for j in 0..n {
+        //     if self.data[j] != other[j] {
+        //         return false;
+        //     }
+        // }
+
         // compare data in parallel
         let mut i = 16;
         while i < n {
@@ -57,6 +64,19 @@ impl ByteStream {
         let n = self.data.len();
         let m = other.len();
         let len = min(n, m);
+
+        // // compare the rest of the bytes
+        // for j in 0..len {
+        //     let left = self.data[j];
+        //     let right = other[j];
+        //     if left == right {
+        //         continue;
+        //     } else if left < right {
+        //         return Some(Ordering::Less);
+        //     } else {
+        //         return Some(Ordering::Greater);
+        //     }
+        // }
 
         // compare data in parallel
         let mut i = 16;

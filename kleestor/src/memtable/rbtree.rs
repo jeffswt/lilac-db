@@ -2,6 +2,7 @@ use crate::memtable::MemTable;
 use crate::record::{ByteStream, KvData, KvDataRef, KvPointer};
 use crate::utils;
 use std::alloc::{alloc, dealloc, Layout};
+use std::mem::{self, MaybeUninit};
 use std::ptr::{self, null_mut};
 
 /// A thread-safe implementation of B tree, which utilizes mutex locks on the
@@ -157,8 +158,8 @@ impl<K: Ord + Eq, V> Node<K, V> {
         // the newly inserted node is temporarily colored red so that all paths
         // contain the same number of black nodes as before.
         (*ptr).color = Color::Red;
-        (*ptr).key = key;
-        (*ptr).value = value;
+        mem::forget(mem::replace(&mut (*ptr).key, key));
+        mem::forget(mem::replace(&mut (*ptr).value, value));
         (*ptr).parent = ptr::null_mut();
         (*ptr).child[0] = ptr::null_mut();
         (*ptr).child[1] = ptr::null_mut();
@@ -169,10 +170,7 @@ impl<K: Ord + Eq, V> Node<K, V> {
     /// Releases pointer.
     #[allow(dead_code)]
     pub unsafe fn drop(ptr: *mut Self) -> () {
-        drop(Box::from_raw(&mut (*ptr).key));
-        drop(Box::from_raw(&mut (*ptr).value));
-
-        dealloc(ptr as *mut u8, Self::layout());
+        let _item = ptr.read();
     }
 }
 
@@ -372,5 +370,22 @@ impl<K: Ord + Eq, V> RBTree<K, V> {
         (*g).color = Color::Red;
 
         return;
+    }
+
+    /// Recursively drop tree.
+    unsafe fn drop_recursive(&self, ptr: *mut Node<K, V>) -> () {
+        if ptr == ptr::null_mut() {
+            return;
+        }
+        self.drop_recursive((*ptr).child[0]);
+        self.drop_recursive((*ptr).child[1]);
+        Node::drop(ptr);
+    }
+}
+
+impl<K: Ord + Eq, V> Drop for RBTree<K, V> {
+    fn drop(&mut self) {
+        unsafe { self.drop_recursive(self.root); }
+        self.root = ptr::null_mut();
     }
 }
