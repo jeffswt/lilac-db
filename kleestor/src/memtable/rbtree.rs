@@ -32,13 +32,13 @@ impl RBTree<ByteStream, KvData> {
     }
 
     /// Access full-scan iterator.
-    pub fn iter_mut(&mut self) -> Option<RBTreeIterator> {
+    pub fn iter_mut(&mut self) -> RBTreeIterator {
         unsafe {
             let mut ptr = self.root;
             while ptr != ptr::null_mut() && (*ptr).child[0] != ptr::null_mut() {
                 ptr = (*ptr).child[0];
             }
-            Some(RBTreeIterator { node: ptr })
+            RBTreeIterator { node: ptr }
         }
     }
 }

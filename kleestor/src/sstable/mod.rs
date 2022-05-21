@@ -19,15 +19,17 @@ mod tests {
     /// Checks if the reader can successfully read index.
     #[test]
     fn can_load() {
-        // let mut tmp_dir = std::env::temp_dir();
-        // tmp_dir.push("_kleestor_sstable_can_load.db");
-        let tmp_dir = "./kleestor_sstable_can_load.db";
+        let mut tmp_dir = std::env::temp_dir();
+        tmp_dir.push("_kleestor_sstable_can_load.db");
 
         // create input memtable
+        let tm = std::time::Instant::now();
         let mut map = RBTree::<ByteStream, KvData>::new();
-        for i in 0..1000 {
+        for _i in 0..1000 {
+            // let i = (921544879_u64 * _i) % 10000000;
+            let i = _i;
             let key = format!("sample-key-{i}");
-            let value = format!("value-{i}-{i}-{i}");
+            let value = format!("value-{i}-{i}-{i}-{i}-{i}-{i}-{i}-{i}-{i}-{i}");
             map.insert(
                 ByteStream::from_slice(key.as_bytes()),
                 KvData::Value {
@@ -36,14 +38,32 @@ mod tests {
                 },
             );
         }
+        let tm = tm.elapsed().as_nanos();
+        let tm = (tm as f64) / 1000000000.0;
+        println!("{tm}s");
 
         // write memtable to disk
+        let tm = std::time::Instant::now();
         let mut _file = std::fs::File::create(&tmp_dir).unwrap();
         let mut table = SSTableWriter::new(_file);
-        table.write(map.iter_mut().unwrap()).unwrap();
+        table.write(map.iter_mut()).unwrap();
+        drop(table);
+
+        let tm = tm.elapsed().as_nanos();
+        let tm = (tm as f64) / 1000000000.0;
+        println!("{tm}s");
 
         // read memtable
+        let tm = std::time::Instant::now();
         let mut _file = std::fs::File::open(&tmp_dir).unwrap();
-        let mut _table = SSTableReader::new(_file);
+        let table = SSTableReader::new(_file).unwrap();
+        drop(table);
+
+        let tm = tm.elapsed().as_nanos();
+        let tm = (tm as f64) / 1000000000.0;
+        println!("{tm}s");
+
+        // cleanup
+        std::fs::remove_file(&tmp_dir).unwrap();
     }
 }

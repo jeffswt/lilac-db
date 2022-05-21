@@ -147,8 +147,6 @@ impl VarUint64 {
     /// Converts an unsigned 64-bit integer into a varuint64 char array,
     /// returning the number of written characters.
     pub fn as_slice(value: u64, array: &mut [u8]) -> usize {
-        assert!(array.len() >= 9);
-
         if value < (1 << 7) {
             array[0] = value as u8;
             return 1;
