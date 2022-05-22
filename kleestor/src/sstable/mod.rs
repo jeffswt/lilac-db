@@ -9,12 +9,11 @@ enum MetaBlockType {
 
 #[cfg(test)]
 mod tests {
+    use super::reader::SSTableReader;
+    use super::writer::SSTableWriter;
     use crate::memtable::rbtree::RBTree;
     use crate::memtable::MemTable;
     use crate::record::{ByteStream, KvData};
-
-    use super::reader::SSTableReader;
-    use super::writer::SSTableWriter;
 
     /// Checks if the reader can successfully read index.
     #[test]

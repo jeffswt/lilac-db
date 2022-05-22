@@ -66,7 +66,7 @@ where
         let mut last_key = the_null_key.as_ref();
 
         // start writing keys
-        let mut _last_item: Pointer;
+        let mut _last_item: Pointer; // hold lifetime
         let mut iter = iter.peekable();
         while let Some(item) = iter.next() {
             // fetch values
@@ -118,6 +118,7 @@ where
         self.write_varu64(0_u64);
         self.write_varu64(0_u64);
         self.write_varu64(0_u64);
+        self.write_varu64(0_u8 as u64);
 
         // write index block
         // starts with 1 counter and [counter] indices, all in varuint64

@@ -60,8 +60,8 @@ impl ByteStream {
     }
 
     /// Compare against another reference using SIMD.
-    pub fn ref_partial_cmp(&self, other: &[u8]) -> Option<Ordering> {
-        let n = self.data.len();
+    pub fn ref_2_partial_cmp(this: &[u8], other: &[u8]) -> Option<Ordering> {
+        let n = this.len();
         let m = other.len();
         let len = min(n, m);
 
@@ -81,7 +81,7 @@ impl ByteStream {
         // compare data in parallel
         let mut i = 16;
         while i < len {
-            let left: Simd<u8, 16> = Simd::from_slice(&self.data[i - 16..i]);
+            let left: Simd<u8, 16> = Simd::from_slice(&this[i - 16..i]);
             let right: Simd<u8, 16> = Simd::from_slice(&other[i - 16..i]);
             if left == right {
                 i += 16;
@@ -89,7 +89,7 @@ impl ByteStream {
             }
             // compare for differences
             for j in i - 16..i {
-                let left = self.data[j];
+                let left = this[j];
                 let right = other[j];
                 if left == right {
                     continue;
@@ -104,7 +104,7 @@ impl ByteStream {
 
         // compare the rest of the bytes
         for j in i - 16..len {
-            let left = self.data[j];
+            let left = this[j];
             let right = other[j];
             if left == right {
                 continue;
@@ -117,6 +117,10 @@ impl ByteStream {
 
         // whichever longer is greater
         n.partial_cmp(&m)
+    }
+
+    pub fn ref_partial_cmp(&self, other: &[u8]) -> Option<Ordering> {
+        Self::ref_2_partial_cmp(self.as_ref(), other)
     }
 }
 
