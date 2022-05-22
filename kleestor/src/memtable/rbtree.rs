@@ -1,8 +1,8 @@
 use crate::memtable::MemTable;
-use crate::record::{ByteStream, KvData, KvDataRef, KvPointer};
+use crate::record::{ByteStream, KvData, KvDataRef, KvEntry, KvPointer};
 use crate::utils;
-use std::alloc::{alloc, dealloc, Layout};
-use std::mem::{self, MaybeUninit};
+use std::alloc::{alloc, Layout};
+use std::mem;
 use std::ptr::{self, null_mut};
 
 /// A thread-safe implementation of B tree, which utilizes mutex locks on the
@@ -19,7 +19,7 @@ pub struct RBTree<K: Ord + Eq, V> {
 }
 
 /// Additional (special) implementations for RB tree.
-impl RBTree<ByteStream, KvData> {
+impl RBTree<ByteStream, KvEntry> {
     /// Accesses iterator at `table[key] -> value`.
     pub fn get_iter(&mut self, key: &ByteStream) -> Option<RBTreeIterator> {
         unsafe {
@@ -46,7 +46,7 @@ impl RBTree<ByteStream, KvData> {
 /// Tree node iterator manager.
 pub struct RBTreeIterator {
     /// Pointer to next item.
-    node: *mut Node<ByteStream, KvData>,
+    node: *mut Node<ByteStream, KvEntry>,
 }
 
 impl Iterator for RBTreeIterator {
@@ -88,7 +88,7 @@ impl Iterator for RBTreeIterator {
 /// Tree iterator (pointer) interface.
 pub struct RBTreePointer {
     /// Private pointer to current node.
-    _node: *mut Node<ByteStream, KvData>,
+    _node: *mut Node<ByteStream, KvEntry>,
 }
 
 impl KvPointer for RBTreePointer {
@@ -99,7 +99,7 @@ impl KvPointer for RBTreePointer {
 
     fn value(&self) -> KvDataRef {
         let value = unsafe { &(*self._node).value };
-        match value {
+        match &value.record {
             KvData::Tombstone { cached } => KvDataRef::Tombstone { cached: *cached },
             KvData::Value { cached, value } => KvDataRef::Value {
                 cached: *cached,
@@ -108,7 +108,7 @@ impl KvPointer for RBTreePointer {
         }
     }
 
-    fn value_mut(&self) -> &mut KvData {
+    fn value_mut(&self) -> &mut KvEntry {
         unsafe { utils::const_as_mut(&(*self._node).value) }
     }
 }
@@ -385,7 +385,9 @@ impl<K: Ord + Eq, V> RBTree<K, V> {
 
 impl<K: Ord + Eq, V> Drop for RBTree<K, V> {
     fn drop(&mut self) {
-        unsafe { self.drop_recursive(self.root); }
+        unsafe {
+            self.drop_recursive(self.root);
+        }
         self.root = ptr::null_mut();
     }
 }

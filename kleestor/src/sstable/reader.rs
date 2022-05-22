@@ -1,5 +1,5 @@
 use crate::bloom::BloomFilter;
-use crate::record::{ByteStream, KvData, KvDataRef, KvPointer};
+use crate::record::{ByteStream, KvDataRef, KvPointer, KvEntry};
 use crate::utils::varint::VarUint64;
 use memmap::{Mmap, MmapOptions};
 use std::cmp::Ordering;
@@ -333,7 +333,7 @@ impl<'a> KvPointer for SSTableReaderPointer<'a> {
         }
     }
 
-    fn value_mut(&self) -> &mut KvData {
+    fn value_mut(&self) -> &mut KvEntry {
         unimplemented!("sstable cannot be opened as read-write");
     }
 }

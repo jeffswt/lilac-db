@@ -1,2 +1,1 @@
-mod entry;
 mod transimpl;

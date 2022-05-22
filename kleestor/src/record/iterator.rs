@@ -1,5 +1,7 @@
 use crate::record::{KvData, KvDataRef};
 
+use super::KvEntry;
+
 /// Key-value iterator (pointer) interface.
 pub trait KvPointer {
     /// Get key where iterator points to.
@@ -14,6 +16,6 @@ pub trait KvPointer {
     /// Gets a mutable reference to the pointing value.
     ///
     /// This exposes the underlying implementation. Lifetime should be manually
-    /// checked upon.
-    fn value_mut(&self) -> &mut KvData;
+    /// ensured.
+    fn value_mut(&self) -> &mut KvEntry;
 }

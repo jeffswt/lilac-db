@@ -1,7 +1,7 @@
 mod bytestream;
 mod iterator;
-mod kvdata;
+mod kventry;
 
 pub use bytestream::ByteStream;
 pub use iterator::KvPointer;
-pub use kvdata::{KvData, KvDataRef};
+pub use kventry::{KvData, KvDataRef, KvEntry};

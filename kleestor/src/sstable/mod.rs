@@ -13,7 +13,7 @@ mod tests {
     use super::writer::SSTableWriter;
     use crate::memtable::rbtree::RBTree;
     use crate::memtable::MemTable;
-    use crate::record::{ByteStream, KvData};
+    use crate::record::{ByteStream, KvData, KvEntry};
 
     /// Checks if the reader can successfully read index.
     #[test]
@@ -23,7 +23,7 @@ mod tests {
 
         // create input memtable
         let tm = std::time::Instant::now();
-        let mut map = RBTree::<ByteStream, KvData>::new();
+        let mut map = RBTree::<ByteStream, KvEntry>::new();
         for _i in 0..1000 {
             // let i = (921544879_u64 * _i) % 10000000;
             let i = _i;
@@ -31,10 +31,10 @@ mod tests {
             let value = format!("value-{i}-{i}-{i}-{i}-{i}-{i}-{i}-{i}-{i}-{i}");
             map.insert(
                 ByteStream::from_slice(key.as_bytes()),
-                KvData::Value {
+                KvEntry::new(KvData::Value {
                     cached: false,
                     value: ByteStream::from_slice(value.as_bytes()),
-                },
+                }),
             );
         }
         let tm = tm.elapsed().as_nanos();
