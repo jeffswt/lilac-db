@@ -23,9 +23,9 @@ impl ByteStream {
         self.data.len()
     }
 
-    /// Compare equality against another reference using SIMD.
-    pub fn ref_eq(&self, other: &[u8]) -> bool {
-        let n = self.data.len();
+    /// Compare equality of a reference against another reference using SIMD.
+    pub fn ref_2_eq(this: &[u8], other: &[u8]) -> bool {
+        let n = this.len();
         let m = other.len();
 
         if n != m {
@@ -34,7 +34,7 @@ impl ByteStream {
 
         // // compare the rest of the bytes
         // for j in 0..n {
-        //     if self.data[j] != other[j] {
+        //     if this[j] != other[j] {
         //         return false;
         //     }
         // }
@@ -42,7 +42,7 @@ impl ByteStream {
         // compare data in parallel
         let mut i = 16;
         while i < n {
-            let left: Simd<u8, 16> = Simd::from_slice(&self.data[i - 16..i]);
+            let left: Simd<u8, 16> = Simd::from_slice(&this[i - 16..i]);
             let right: Simd<u8, 16> = Simd::from_slice(&other[i - 16..i]);
             if left != right {
                 return false;
@@ -52,11 +52,16 @@ impl ByteStream {
 
         // compare the rest of the bytes
         for j in i - 16..n {
-            if self.data[j] != other[j] {
+            if this[j] != other[j] {
                 return false;
             }
         }
         return true;
+    }
+
+    /// Compare equality against another reference using SIMD.
+    pub fn ref_eq(&self, other: &[u8]) -> bool {
+        Self::ref_2_eq(&self.data, other)
     }
 
     /// Compare against another reference using SIMD.
@@ -67,7 +72,7 @@ impl ByteStream {
 
         // // compare the rest of the bytes
         // for j in 0..len {
-        //     let left = self.data[j];
+        //     let left = this[j];
         //     let right = other[j];
         //     if left == right {
         //         continue;
