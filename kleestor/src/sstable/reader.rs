@@ -33,12 +33,12 @@ impl SSTableReader {
 
         // extract header block
         let mut offset = Self::read_u64(&region[region.len() - 16..]) as usize;
-        let header_block_items = Self::read_varu64(&region, &mut offset)?;
+        let header_block_items = Self::read_varu64(&region, &mut offset);
 
         let mut header_block = BTreeMap::<MetaBlockType, usize>::new();
         for _ in 0..header_block_items {
-            let block_type = Self::read_varu64(&region, &mut offset)?;
-            let indice = Self::read_varu64(&region, &mut offset)?;
+            let block_type = Self::read_varu64(&region, &mut offset);
+            let indice = Self::read_varu64(&region, &mut offset);
             let block_type = match block_type {
                 1 => MetaBlockType::Index,
                 2 => MetaBlockType::BloomFilter,
@@ -71,12 +71,12 @@ impl SSTableReader {
 
     fn get_index(region: &Mmap, mut offset: usize) -> Result<Vec<(ByteStream, usize)>> {
         // read key offset values
-        let len = Self::read_varu64(region, &mut offset)?;
+        let len = Self::read_varu64(region, &mut offset);
         let mut indices = Vec::<usize>::new();
         let mut keys = Vec::<(ByteStream, usize)>::new();
 
         for _ in 0..len {
-            let indice = Self::read_varu64(region, &mut offset)?;
+            let indice = Self::read_varu64(region, &mut offset);
             indices.push(indice as usize);
         }
 
@@ -84,10 +84,10 @@ impl SSTableReader {
         for indice in indices {
             let mut ptr = indice;
 
-            let k_len = Self::read_varu64(region, &mut ptr)? as usize;
-            let common_len = Self::read_varu64(region, &mut ptr)?;
-            let _v_len = Self::read_varu64(region, &mut ptr)?;
-            let _flags = Self::read_varu64(region, &mut ptr)?;
+            let k_len = Self::read_varu64(region, &mut ptr) as usize;
+            let common_len = Self::read_varu64(region, &mut ptr);
+            let _v_len = Self::read_varu64(region, &mut ptr);
+            let _flags = Self::read_varu64(region, &mut ptr);
 
             // you shouldn't index a compressed key
             if common_len != 0 {
@@ -107,7 +107,7 @@ impl SSTableReader {
 
     fn get_bloom_filter(region: &Mmap, mut offset: usize) -> Result<BloomFilter> {
         // validate filter size
-        let size = Self::read_varu64(region, &mut offset)? as usize;
+        let size = Self::read_varu64(region, &mut offset) as usize;
         if size != BloomFilter::default_size() {
             return Err(Error::new(
                 ErrorKind::InvalidData,
@@ -134,9 +134,10 @@ impl SSTableReader {
     }
 
     /// Accesses variable u64 value.
-    fn read_varu64(region: &Mmap, offset: &mut usize) -> Result<u64> {
-        let offset_val = *offset;
-        VarUint64::read_and_seek(&region[offset_val..], offset, region.len() - offset_val)
+    fn read_varu64(region: &Mmap, offset: &mut usize) -> u64 {
+        let (len, result) = VarUint64::read_offset_unchecked(&region[*offset..]);
+        *offset += len;
+        return result;
     }
 
     /// Access item from table.

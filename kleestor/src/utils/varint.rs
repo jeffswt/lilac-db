@@ -127,6 +127,78 @@ impl VarUint64 {
         Ok(((len + 2) as usize, result))
     }
 
+    /// Same as [`read_offset`], but without boundary checks.
+    pub fn read_offset_unchecked(ptr: &[u8]) -> (usize, u64) {
+        // read byte #0
+        let mut result = ptr[0] as u64;
+        match result & 0b_10000000 {
+            0 => return (1, result),
+            _ => result &= 0b_01111111,
+        };
+
+        // read byte #1
+        let byte1 = ptr[1] as u64;
+        let len = byte1 >> 5;
+        result |= (byte1 & 0b_00011111) << 7;
+
+        // read the rest, depending on the case
+        match len {
+            0 => {}
+            1 => {
+                let byte2 = (ptr[2] as u64) << 12;
+                result |= byte2;
+            }
+            2 => {
+                let byte2 = (ptr[2] as u64) << 12;
+                let byte3 = (ptr[3] as u64) << 20;
+                result |= byte2 | byte3;
+            }
+            3 => {
+                let byte2 = (ptr[2] as u64) << 12;
+                let byte3 = (ptr[3] as u64) << 20;
+                let byte4 = (ptr[4] as u64) << 28;
+                result |= byte2 | byte3 | byte4;
+            }
+            4 => {
+                let byte2 = (ptr[2] as u64) << 12;
+                let byte3 = (ptr[3] as u64) << 20;
+                let byte4 = (ptr[4] as u64) << 28;
+                let byte5 = (ptr[5] as u64) << 36;
+                result |= byte2 | byte3 | byte4 | byte5;
+            }
+            5 => {
+                let byte2 = (ptr[2] as u64) << 12;
+                let byte3 = (ptr[3] as u64) << 20;
+                let byte4 = (ptr[4] as u64) << 28;
+                let byte5 = (ptr[5] as u64) << 36;
+                let byte6 = (ptr[6] as u64) << 44;
+                result |= byte2 | byte3 | byte4 | byte5 | byte6;
+            }
+            6 => {
+                let byte2 = (ptr[2] as u64) << 12;
+                let byte3 = (ptr[3] as u64) << 20;
+                let byte4 = (ptr[4] as u64) << 28;
+                let byte5 = (ptr[5] as u64) << 36;
+                let byte6 = (ptr[6] as u64) << 44;
+                let byte7 = (ptr[7] as u64) << 52;
+                result |= byte2 | byte3 | byte4 | byte5 | byte6 | byte7;
+            }
+            7 => {
+                let byte2 = (ptr[2] as u64) << 12;
+                let byte3 = (ptr[3] as u64) << 20;
+                let byte4 = (ptr[4] as u64) << 28;
+                let byte5 = (ptr[5] as u64) << 36;
+                let byte6 = (ptr[6] as u64) << 44;
+                let byte7 = (ptr[7] as u64) << 52;
+                let byte8 = (ptr[8] as u64 & 0b_00001111) << 60;
+                result |= byte2 | byte3 | byte4 | byte5 | byte6 | byte7 | byte8;
+            }
+            _ => unreachable!(),
+        }
+
+        ((len + 2) as usize, result)
+    }
+
     /// Read a varuint64 value from a given [`ptr`] with up to [`length`] bytes
     /// remaining in buffer. Reading past [`ptr + length`] (inclusive) would
     /// trigger a read error.
