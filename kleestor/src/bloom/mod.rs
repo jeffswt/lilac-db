@@ -1,8 +1,8 @@
 pub mod fimpl;
 pub mod strategies;
 
-use crate::record::ByteStream;
-use self::{fimpl::BloomFilterImpl, strategies::SfHash64};
+use self::fimpl::BloomFilterImpl;
+use self::strategies::SfHash64;
 
 /// A hash strategy that produces K positions for a bloom filter on a span of
 /// 2^ML slots in total.

@@ -131,7 +131,7 @@ impl VarUint64 {
     /// remaining in buffer. Reading past [`ptr + length`] (inclusive) would
     /// trigger a read error.
     pub fn read(ptr: &[u8], length: usize) -> Result<u64> {
-        let (len, value) = Self::read_offset(ptr, length)?;
+        let (_len, value) = Self::read_offset(ptr, length)?;
         Ok(value)
     }
 

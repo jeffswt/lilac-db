@@ -1,5 +1,4 @@
 use crate::bloom::HashStrategy;
-use crate::record::ByteStream;
 use fasthash::{xx::Hasher64, FastHasher};
 use std::hash::Hasher;
 

@@ -1,5 +1,4 @@
 use crate::bloom::HashStrategy;
-use crate::record::ByteStream;
 #[allow(deprecated)]
 use std::hash::{Hasher, SipHasher};
 

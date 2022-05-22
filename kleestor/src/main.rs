@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 #![allow(incomplete_features)]
 #![feature(core_intrinsics)]
 #![feature(generic_const_exprs)]

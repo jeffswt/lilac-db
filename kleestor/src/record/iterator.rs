@@ -1,4 +1,4 @@
-use crate::record::{KvData, KvDataRef};
+use crate::record::KvDataRef;
 
 use super::KvEntry;
 
