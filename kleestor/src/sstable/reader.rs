@@ -1,12 +1,12 @@
 use crate::bloom::BloomFilter;
-use crate::record::{ByteStream, KvDataRef, KvPointer, KvEntry};
+use crate::record::{ByteStream, KvDataRef, KvEntry, KvPointer};
 use crate::utils;
 use crate::utils::varint::VarUint64;
 use memmap::{Mmap, MmapOptions};
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::fs::File;
-use std::io::{Error, ErrorKind, Result};
+use std::io::{Error, ErrorKind, Result as IoResult};
 use std::iter::Peekable;
 use std::mem;
 use std::rc::Rc;
@@ -22,7 +22,7 @@ pub struct SSTableReader {
 }
 
 impl SSTableReader {
-    pub fn new(handle: File) -> Result<Self> {
+    pub fn new(handle: File) -> IoResult<Self> {
         // unzip file to a memory map
         let region = unsafe { MmapOptions::new().map(&handle)? };
 
@@ -70,7 +70,7 @@ impl SSTableReader {
         })
     }
 
-    fn get_index(region: &Mmap, mut offset: usize) -> Result<Vec<(ByteStream, usize)>> {
+    fn get_index(region: &Mmap, mut offset: usize) -> IoResult<Vec<(ByteStream, usize)>> {
         // read key offset values
         let len = Self::read_varu64(region, &mut offset);
         let mut indices = Vec::<usize>::new();
@@ -106,7 +106,7 @@ impl SSTableReader {
         Ok(keys)
     }
 
-    fn get_bloom_filter(region: &Mmap, mut offset: usize) -> Result<BloomFilter> {
+    fn get_bloom_filter(region: &Mmap, mut offset: usize) -> IoResult<BloomFilter> {
         // validate filter size
         let size = Self::read_varu64(region, &mut offset) as usize;
         if size != BloomFilter::default_size() {
@@ -329,7 +329,7 @@ impl<'a> KvPointer for SSTableReaderPointer<'a> {
             0b00000001_u8 => KvDataRef::Tombstone { cached: true },
             0b00000000_u8 => KvDataRef::Value {
                 cached: true,
-                value: unsafe { utils::reborrow_arr(self._value) },
+                value: unsafe { utils::reborrow_slice(self._value) },
             },
             rest => panic!("unrecognized flag {rest}"),
         }
