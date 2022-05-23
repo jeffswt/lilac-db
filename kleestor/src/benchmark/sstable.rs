@@ -17,16 +17,16 @@ fn get_tmp_filename(run_id: i64) -> PathBuf {
 fn run_impl(name_prefix: &str) -> Vec<BenchmarkResult> {
     // set parameters (run_id, max_size);
     let params: Vec<(i64, i64)> = vec![
-        (0, 5000),
-        (1, 20000),
-        (2, 100000),
-        (3, 200000),
+        // (0, 5000),
+        // (1, 20000),
+        // (2, 100000),
+        // (3, 200000),
         (4, 500000),
-        (5, 1000000),
-        (6, 2000000),
-        (7, 3000000),
-        (8, 4000000),
-        (9, 5000000),
+        // (5, 1000000),
+        // (6, 2000000),
+        // (7, 3000000),
+        // (8, 4000000),
+        // (9, 5000000),
     ];
     let global_offset = 1000000_i64;
     let prime = 998244353_i64;
@@ -141,9 +141,9 @@ fn run_impl(name_prefix: &str) -> Vec<BenchmarkResult> {
             let i = global_offset + _i;
             let key = format!("sample-key-{i}");
             match reader.get(key.as_bytes()).unwrap() {
-                KvDataRef::Tombstone { .. } => preserve_data += 1,
-                KvDataRef::Value { value, .. } => {
-                    for ch in value {
+                KvData::Tombstone { .. } => preserve_data += 1,
+                KvData::Value { value, .. } => {
+                    for ch in value.as_ref() {
                         preserve_data += *ch as usize;
                     }
                 }
@@ -166,9 +166,9 @@ fn run_impl(name_prefix: &str) -> Vec<BenchmarkResult> {
             let i = global_offset + prime * _i % counter_limit;
             let key = format!("sample-key-{i}");
             match reader.get(key.as_bytes()).unwrap() {
-                KvDataRef::Tombstone { .. } => preserve_data += 1,
-                KvDataRef::Value { value, .. } => {
-                    for ch in value {
+                KvData::Tombstone { .. } => preserve_data += 1,
+                KvData::Value { value, .. } => {
+                    for ch in value.as_ref() {
                         preserve_data += *ch as usize;
                     }
                 }

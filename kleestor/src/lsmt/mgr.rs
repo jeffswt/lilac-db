@@ -159,10 +159,8 @@ impl LsmTree {
             let _lock = self.lvrest_lock.read().await;
             for (_loc, ss) in &self.lvrest {
                 match ss.get(key) {
-                    Some(crate::record::KvDataRef::Tombstone { .. }) => return None,
-                    Some(crate::record::KvDataRef::Value { value, .. }) => {
-                        return Some(ByteStream::from(value))
-                    }
+                    Some(crate::record::KvData::Tombstone { .. }) => return None,
+                    Some(crate::record::KvData::Value { value, .. }) => return Some(value),
                     None => (),
                 };
             }

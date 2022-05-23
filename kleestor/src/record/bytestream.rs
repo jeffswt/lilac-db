@@ -1,4 +1,5 @@
 use std::cmp::{min, Ordering};
+use std::hash::{Hash, Hasher};
 use std::simd::Simd;
 
 #[derive(Eq, Ord)]
@@ -159,6 +160,15 @@ impl PartialEq for ByteStream {
 impl PartialOrd for ByteStream {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.ref_partial_cmp(other.as_ref())
+    }
+}
+
+impl Hash for ByteStream {
+    fn hash<H>(&self, state: &mut H)
+    where
+        H: Hasher,
+    {
+        self.data.hash(state)
     }
 }
 

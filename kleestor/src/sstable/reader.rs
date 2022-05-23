@@ -1,5 +1,5 @@
 use crate::bloom::BloomFilter;
-use crate::record::{ByteStream, KvDataRef, KvEntry, KvPointer};
+use crate::record::{ByteStream, KvDataRef, KvEntry, KvPointer, KvData};
 use crate::utils;
 use crate::utils::varint::VarUint64;
 use memmap::{Mmap, MmapOptions};
@@ -142,7 +142,7 @@ impl SSTableReader {
     }
 
     /// Access item from table.
-    pub fn get(&self, key: &[u8]) -> Option<KvDataRef> {
+    pub fn get(&self, key: &[u8]) -> Option<KvData> {
         // use iterator
         let mut iter = match self.get_iter(key) {
             None => return None,
@@ -154,10 +154,10 @@ impl SSTableReader {
         };
         // clone reference
         match item.value() {
-            KvDataRef::Tombstone { cached } => Some(KvDataRef::Tombstone { cached }),
-            KvDataRef::Value { cached, value } => Some(KvDataRef::Value {
+            KvDataRef::Tombstone { cached } => Some(KvData::Tombstone { cached }),
+            KvDataRef::Value { cached, value } => Some(KvData::Value {
                 cached,
-                value: unsafe { mem::transmute(value) }, // trust mmap
+                value: ByteStream::from(value),
             }),
         }
     }
