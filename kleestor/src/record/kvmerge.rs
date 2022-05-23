@@ -1,6 +1,6 @@
 use crate::record::{ByteStream, KvDataRef, KvEntry, KvPointer};
+use crate::utils;
 use std::cmp::Ordering;
-use std::mem;
 
 /// Joins a list of [`Iterator<KvPointer>`] with priority. Earlier items have
 /// higher priority and will override all latter items with the same key.
@@ -16,7 +16,7 @@ where
     /// A list of all iterators to merge.
     iterators: Vec<Iter>,
     /// Buffer that is used to compare and store new (key, value, index) pairs.
-    buffer: Vec<(&'a [u8], KvDataRef<'a>, usize)>,
+    buffer: Vec<(&'a [u8], KvDataRef, usize)>,
 }
 
 impl<'a, Pointer, Iter> KvMergeIterator<'a, Pointer, Iter>
@@ -31,25 +31,19 @@ where
     /// It is required that no items belonging to the [`index`]-th iterator
     /// still persist in the buffer.
     fn binary_insert(&mut self, index: usize) -> () {
-        let iter = &mut self.iterators[index];
+        let iter = unsafe { utils::const_as_mut(&self.iterators[index]) };
         loop {
             let item = match iter.next() {
                 None => break,
                 Some(it) => it,
             };
-            let key = item.key();
+            let key = unsafe { utils::reborrow_arr(item.key()) };
+            let value = item.value().clone();
             let insert_at = match self.binary_search(key) {
                 FoundIndex::Equal(_) => continue,
                 FoundIndex::Less(idx) => idx,
             };
-            self.buffer.insert(
-                insert_at,
-                (
-                    unsafe { mem::transmute(key) },
-                    unsafe { mem::transmute(item.value()) },
-                    index,
-                ),
-            );
+            self.buffer.insert(insert_at, (key, value, index));
             break;
         }
     }
@@ -90,7 +84,10 @@ where
         // really nothing to take or else
         let (key, value, index) = match self.buffer.len() {
             0 => return None,
-            _ => self.buffer[0],
+            _ => {
+                let tup = &self.buffer[0];
+                (tup.0, tup.1.clone(), tup.2)
+            }
         };
 
         // fill the next in and leave
@@ -105,7 +102,7 @@ where
 /// Internal pointer implementation for joiner iterator.
 pub struct KvMergePointer<'a> {
     _key: &'a [u8],
-    _value: KvDataRef<'a>,
+    _value: KvDataRef,
 }
 
 impl<'a> KvPointer for KvMergePointer<'a> {
@@ -118,7 +115,7 @@ impl<'a> KvPointer for KvMergePointer<'a> {
     /// You should expect this reference to invalidate as soon as the pointer
     /// left this region.
     fn value(&self) -> KvDataRef {
-        self._value
+        self._value.clone()
     }
 
     /// Gets a mutable reference to the pointing value.

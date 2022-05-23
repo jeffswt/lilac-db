@@ -39,7 +39,19 @@ pub enum KvData {
 }
 
 /// Reference to `KvData`.
-pub enum KvDataRef<'a> {
+pub enum KvDataRef {
     Tombstone { cached: bool },
-    Value { cached: bool, value: &'a [u8] },
+    Value { cached: bool, value: &'static [u8] },
+}
+
+impl Clone for KvDataRef {
+    fn clone(&self) -> Self {
+        match self {
+            KvDataRef::Tombstone { cached } => KvDataRef::Tombstone { cached: *cached },
+            KvDataRef::Value { cached, value } => KvDataRef::Value {
+                cached: *cached,
+                value,
+            },
+        }
+    }
 }

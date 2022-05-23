@@ -1,5 +1,6 @@
 use crate::bloom::BloomFilter;
 use crate::record::{ByteStream, KvDataRef, KvPointer, KvEntry};
+use crate::utils;
 use crate::utils::varint::VarUint64;
 use memmap::{Mmap, MmapOptions};
 use std::cmp::Ordering;
@@ -328,7 +329,7 @@ impl<'a> KvPointer for SSTableReaderPointer<'a> {
             0b00000001_u8 => KvDataRef::Tombstone { cached: true },
             0b00000000_u8 => KvDataRef::Value {
                 cached: true,
-                value: self._value,
+                value: unsafe { utils::reborrow_arr(self._value) },
             },
             rest => panic!("unrecognized flag {rest}"),
         }
