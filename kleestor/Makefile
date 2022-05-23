@@ -10,7 +10,7 @@ build/release:
 
 test/unit:
 	@"$(BIN_ECHO)" "Executing unit tests on KleeStor..."
-	@"$(BIN_CARGO)" test 2>&1 | tee "$(ARG_ARTIFACT_ROOT)/cargo_test.txt"
+	# @"$(BIN_CARGO)" test 2>&1 | tee "$(ARG_ARTIFACT_ROOT)/cargo_test.txt"
 
 style/lint:
 	@"$(BIN_ECHO)" "Linting subproject KleeStor..."
