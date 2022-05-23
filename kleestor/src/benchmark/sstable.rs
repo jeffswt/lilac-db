@@ -17,13 +17,18 @@ fn get_tmp_filename(run_id: i64) -> PathBuf {
 fn run_impl(name_prefix: &str) -> Vec<BenchmarkResult> {
     // set parameters (run_id, max_size);
     let params: Vec<(i64, i64)> = vec![
-        (1, 1000),
-        (2, 2000),
-        (3, 3000),
-        (4, 4000),
-        (5, 5000),
+        (0, 5000),
+        (1, 20000),
+        (2, 100000),
+        (3, 200000),
+        (4, 500000),
+        (5, 1000000),
+        (6, 2000000),
+        (7, 3000000),
+        (8, 4000000),
+        (9, 5000000),
     ];
-    let global_offset = 1000_i64;
+    let global_offset = 1000000_i64;
     let prime = 998244353_i64;
 
     // prepare dataset outputs
@@ -63,10 +68,10 @@ fn run_impl(name_prefix: &str) -> Vec<BenchmarkResult> {
     };
 
     // start working
-    let mut total_bytes = 0_usize;
     for (run_id, counter_limit) in &params {
         let run_id = *run_id;
         let counter_limit = *counter_limit;
+        let mut total_bytes = 0_usize;
 
         // create memtable
         let mut map = RBTree::<ByteStream, KvEntry>::new();
@@ -112,11 +117,15 @@ fn run_impl(name_prefix: &str) -> Vec<BenchmarkResult> {
         for item in reader.iter() {
             match item.value() {
                 KvDataRef::Tombstone { .. } => preserve_data += 1,
-                KvDataRef::Value { value, .. } => preserve_data += value.len(),
+                KvDataRef::Value { value, .. } => {
+                    for ch in value {
+                        preserve_data += *ch as usize;
+                    }
+                }
             };
         }
 
-        let duration = duration.elapsed().as_nanos() + (preserve_data as u128 % 2);
+        let duration = duration.elapsed().as_nanos() + (preserve_data as u128 % 233);
         seq_scan_tps_result.data.push(DataPoint {
             x: counter_limit as f64,
             y: counter_limit as f64 / ((duration as f64) / 1.0e9),
@@ -133,11 +142,15 @@ fn run_impl(name_prefix: &str) -> Vec<BenchmarkResult> {
             let key = format!("sample-key-{i}");
             match reader.get(key.as_bytes()).unwrap() {
                 KvDataRef::Tombstone { .. } => preserve_data += 1,
-                KvDataRef::Value { value, .. } => preserve_data += value.len(),
+                KvDataRef::Value { value, .. } => {
+                    for ch in value {
+                        preserve_data += *ch as usize;
+                    }
+                }
             };
         }
 
-        let duration = duration.elapsed().as_nanos() + (preserve_data as u128 % 2);
+        let duration = duration.elapsed().as_nanos() + (preserve_data as u128 % 233);
         seq_read_tps_result.data.push(DataPoint {
             x: counter_limit as f64,
             y: counter_limit as f64 / ((duration as f64) / 1.0e9),
@@ -154,11 +167,15 @@ fn run_impl(name_prefix: &str) -> Vec<BenchmarkResult> {
             let key = format!("sample-key-{i}");
             match reader.get(key.as_bytes()).unwrap() {
                 KvDataRef::Tombstone { .. } => preserve_data += 1,
-                KvDataRef::Value { value, .. } => preserve_data += value.len(),
+                KvDataRef::Value { value, .. } => {
+                    for ch in value {
+                        preserve_data += *ch as usize;
+                    }
+                }
             };
         }
 
-        let duration = duration.elapsed().as_nanos() + (preserve_data as u128 % 2);
+        let duration = duration.elapsed().as_nanos() + (preserve_data as u128 % 233);
         rand_read_tps_result.data.push(DataPoint {
             x: counter_limit as f64,
             y: counter_limit as f64 / ((duration as f64) / 1.0e9),
