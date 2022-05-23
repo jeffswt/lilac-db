@@ -85,11 +85,11 @@ impl BenchmarkManager {
 
         self.add(memtable::run());
 
+        self.add(sstable::run());
+
         self.add(bloomf::siphash_rp());
         self.add(bloomf::xxhash_rp());
         self.add(bloomf::sfhash64_rp());
-        self.add(sstable::run());
-
     }
 
     /// Add records to the result.

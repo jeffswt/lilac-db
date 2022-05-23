@@ -94,7 +94,7 @@ impl SSTableReader {
             cache_lock: MutexSync::new(()),
             cache_read: LruCache::new(2048),
             cache_lookaside: LruCache::new(256),
-            cache_seq_ind: 0.0,
+            cache_seq_ind: 16.0,
         })
     }
 
@@ -180,8 +180,13 @@ impl SSTableReader {
                 None => (),
             };
             match self.cache_lookaside.get(&key_bs) {
-                Some(entry) => return Some(entry.clone()),
-                None => (),
+                Some(entry) => {
+                    self.cache_seq_ind = f64::min(self.cache_seq_ind * 1.12, 256.0);
+                    return Some(entry.clone());
+                }
+                None => {
+                    self.cache_seq_ind = f64::max(self.cache_seq_ind - 0.8, 1.0);
+                }
             };
         }
 
@@ -201,27 +206,20 @@ impl SSTableReader {
             let result = KvData::from(&item.value());
 
             // update lru cache, flushing entire region into lru
-            let mut max_items = 8;
-            let term_offset = if index + 1 < (*ptr).keys.len() {
-                (*ptr).keys[index + 1].1
-            } else {
-                (*ptr).keys[index].1
-            };
+            let mut max_items = i32::max(1, ((*ptr).cache_seq_ind / 8.0) as i32 - 1);
             '_upd_cache: {
                 let _lock = (*ptr).cache_lock.lock();
                 (*ptr).cache_read.put(key_bs, result.clone());
-                for item in iter {
-                    (*ptr)
-                        .cache_lookaside
-                        .put(ByteStream::from(item.key()), KvData::from(&item.value()));
-                    if item._offset >= term_offset {
-                        break;
-                    }
-                    // ensure we don't look-ahead too much
+                while max_items > 0 {
                     max_items -= 1;
-                    if max_items <= 0 {
+                    let item = iter.next();
+                    if let None = &item {
                         break;
                     }
+                    let item = item.unwrap();
+                    let key = ByteStream::from(item.key());
+                    let value = KvData::from(&item.value());
+                    (*ptr).cache_lookaside.put(key, value);
                 }
             }
             Some(result)
