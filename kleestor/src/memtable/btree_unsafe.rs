@@ -165,7 +165,7 @@ impl<K: Ord + Eq, V, const ORDER: usize> BTreeUnsafe<K, V, ORDER> {
                 true => {
                     free_from_heap(k); // is not used in structure
                     Some(())
-                },
+                }
                 false => None,
             },
             InsertResult::Split {

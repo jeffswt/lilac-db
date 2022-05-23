@@ -163,12 +163,7 @@ where
     }
 
     // writes key-value pair
-    fn write_kv_pair(
-        &mut self,
-        k: &[u8],
-        k_common_len: usize,
-        v: &KvDataRef,
-    ) -> Result<()> {
+    fn write_kv_pair(&mut self, k: &[u8], k_common_len: usize, v: &KvDataRef) -> Result<()> {
         match &v {
             KvDataRef::Tombstone { .. } => {
                 // write lengths

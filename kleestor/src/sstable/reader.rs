@@ -195,7 +195,7 @@ impl SSTableReader {
             let ptr = self as *mut Self;
 
             // locate item and clone
-            let (index, mut iter) = match (*ptr).get_iter_internal(key) {
+            let (_index, mut iter) = match (*ptr).get_iter_internal(key) {
                 None => return None,
                 Some(it) => it,
             };
