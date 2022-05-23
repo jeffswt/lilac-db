@@ -1,6 +1,7 @@
 mod bloomf;
 mod memtable;
 mod nstree;
+mod sstable;
 
 use json::{object, JsonValue};
 use std::fs::File;
@@ -87,6 +88,8 @@ impl BenchmarkManager {
         self.add(bloomf::siphash_rp());
         self.add(bloomf::xxhash_rp());
         self.add(bloomf::sfhash64_rp());
+        self.add(sstable::run());
+
     }
 
     /// Add records to the result.

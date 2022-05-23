@@ -186,7 +186,6 @@ mod tests {
     fn get_file_path(id: u32) -> PathBuf {
         let mut tmp_dir = std::env::temp_dir();
         tmp_dir.push(format!("_kleestor_record_kvmerge_run_{id}.db"));
-        let s = tmp_dir.to_str().unwrap();
         tmp_dir
     }
 
