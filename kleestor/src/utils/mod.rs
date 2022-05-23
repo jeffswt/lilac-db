@@ -19,6 +19,6 @@ pub unsafe fn reborrow_slice<T>(item: &[T]) -> &'static [T] {
 }
 
 #[inline]
-pub unsafe fn reborrow_mut<T>(item: &mut T) -> &mut T {
+pub unsafe fn reborrow_mut<T>(item: &mut T) -> *mut T {
     &mut *(mem::transmute::<*mut T, *mut T>(item as *mut T))
 }

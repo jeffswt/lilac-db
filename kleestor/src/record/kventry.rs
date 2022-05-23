@@ -38,6 +38,30 @@ pub enum KvData {
     Value { cached: bool, value: ByteStream },
 }
 
+impl Clone for KvData {
+    fn clone(&self) -> Self {
+        match self {
+            KvData::Tombstone { cached } => KvData::Tombstone { cached: *cached },
+            KvData::Value { cached, value } => KvData::Value {
+                cached: *cached,
+                value: ByteStream::from(value),
+            },
+        }
+    }
+}
+
+impl From<&KvDataRef> for KvData {
+    fn from(other: &KvDataRef) -> Self {
+        match other {
+            KvDataRef::Tombstone { cached } => KvData::Tombstone { cached: *cached },
+            KvDataRef::Value { cached, value } => KvData::Value {
+                cached: *cached,
+                value: ByteStream::from(*value),
+            },
+        }
+    }
+}
+
 /// Reference to `KvData`.
 pub enum KvDataRef {
     Tombstone { cached: bool },

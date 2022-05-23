@@ -112,7 +112,7 @@ fn run_impl(name_prefix: &str) -> Vec<BenchmarkResult> {
         // read memtable from disk (run seq scan)
         let duration = Instant::now();
         let file = std::fs::File::open(&get_tmp_filename(run_id)).unwrap();
-        let reader = SSTableReader::new(file).unwrap();
+        let mut reader = SSTableReader::new(file).unwrap();
         let mut preserve_data = 0;
         for item in reader.iter() {
             match item.value() {

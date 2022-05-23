@@ -1,24 +1,48 @@
 use crate::bloom::BloomFilter;
-use crate::record::{ByteStream, KvDataRef, KvEntry, KvPointer, KvData};
+use crate::record::{ByteStream, KvData, KvDataRef, KvEntry, KvPointer};
 use crate::utils;
+use crate::utils::futures::MutexSync;
 use crate::utils::varint::VarUint64;
+use lru::LruCache;
 use memmap::{Mmap, MmapOptions};
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::{Error, ErrorKind, Result as IoResult};
 use std::iter::Peekable;
-use std::mem;
 use std::rc::Rc;
 
 use super::MetaBlockType;
 
 pub struct SSTableReader {
+    /// Reference to file, just to keep it open.
     _handle: File,
 
+    /// Mapped memory region.
     region: Mmap,
+
+    /// Internal bloom filter to check for missing keys.
     bloom: BloomFilter,
+
+    /// Indexed breaking points that are saved every ?? keys.
     keys: Vec<(ByteStream, usize)>,
+
+    /// LRU cache locks.
+    ///
+    /// TODO: this might cause issues on an async workload.
+    cache_lock: MutexSync<()>,
+
+    /// LRU cache for recently *accessed* items.
+    cache_read: LruCache<ByteStream, KvData>,
+
+    /// LRU cache as a look-aside buffer. This can be really useful when
+    /// continuously accessing discrete items sequentially (and for this
+    /// purpose is way smaller than the read buffer).
+    cache_lookaside: LruCache<ByteStream, KvData>,
+
+    /// Sequential read indicator, when consistent seqread are performed, we
+    /// will rely on [`cache_lookaside`] more.
+    cache_seq_ind: f64,
 }
 
 impl SSTableReader {
@@ -67,6 +91,10 @@ impl SSTableReader {
             region,
             bloom,
             keys,
+            cache_lock: MutexSync::new(()),
+            cache_read: LruCache::new(2048),
+            cache_lookaside: LruCache::new(256),
+            cache_seq_ind: 0.0,
         })
     }
 
@@ -142,29 +170,78 @@ impl SSTableReader {
     }
 
     /// Access item from table.
-    pub fn get(&self, key: &[u8]) -> Option<KvData> {
-        // use iterator
-        let mut iter = match self.get_iter(key) {
-            None => return None,
-            Some(it) => it,
-        };
-        let item = match iter.next() {
-            None => return None,
-            Some(it) => it,
-        };
-        // clone reference
-        match item.value() {
-            KvDataRef::Tombstone { cached } => Some(KvData::Tombstone { cached }),
-            KvDataRef::Value { cached, value } => Some(KvData::Value {
-                cached,
-                value: ByteStream::from(value),
-            }),
+    pub fn get(&mut self, key: &[u8]) -> Option<KvData> {
+        // check for lru cache(s)
+        let key_bs = ByteStream::from(key);
+        '_chk_cache: {
+            let _lock = self.cache_lock.lock();
+            match self.cache_read.get(&key_bs) {
+                Some(entry) => return Some(entry.clone()),
+                None => (),
+            };
+            match self.cache_lookaside.get(&key_bs) {
+                Some(entry) => return Some(entry.clone()),
+                None => (),
+            };
+        }
+
+        // just to circumvent the blasted lifetime checker
+        unsafe {
+            let ptr = self as *mut Self;
+
+            // locate item and clone
+            let (index, mut iter) = match (*ptr).get_iter_internal(key) {
+                None => return None,
+                Some(it) => it,
+            };
+            let item = match iter.next() {
+                None => return None,
+                Some(it) => it,
+            };
+            let result = KvData::from(&item.value());
+
+            // update lru cache, flushing entire region into lru
+            let mut max_items = 8;
+            let term_offset = if index + 1 < (*ptr).keys.len() {
+                (*ptr).keys[index + 1].1
+            } else {
+                (*ptr).keys[index].1
+            };
+            '_upd_cache: {
+                let _lock = (*ptr).cache_lock.lock();
+                (*ptr).cache_read.put(key_bs, result.clone());
+                for item in iter {
+                    (*ptr)
+                        .cache_lookaside
+                        .put(ByteStream::from(item.key()), KvData::from(&item.value()));
+                    if item._offset >= term_offset {
+                        break;
+                    }
+                    // ensure we don't look-ahead too much
+                    max_items -= 1;
+                    if max_items <= 0 {
+                        break;
+                    }
+                }
+            }
+            Some(result)
         }
     }
 
     /// Access item from table, returning a partial-scan iterator from that
     /// location.
-    pub fn get_iter(&self, key: &[u8]) -> Option<Peekable<SSTableReaderIterator>> {
+    pub fn get_iter(&mut self, key: &[u8]) -> Option<Peekable<SSTableReaderIterator>> {
+        match self.get_iter_internal(key) {
+            None => None,
+            Some((_index, iter)) => Some(iter),
+        }
+    }
+
+    /// Internal implementation of [`get_iter`].
+    fn get_iter_internal(
+        &mut self,
+        key: &[u8],
+    ) -> Option<(usize, Peekable<SSTableReaderIterator>)> {
         // check if key might be non-existent in bloom filter
         if !self.bloom.query(key) {
             return None;
@@ -179,7 +256,7 @@ impl SSTableReader {
         loop {
             match ByteStream::ref_2_partial_cmp(iter.peek().unwrap().key(), key) {
                 Some(Ordering::Greater) => return None,
-                Some(Ordering::Equal) => return Some(iter),
+                Some(Ordering::Equal) => return Some((index, iter)),
                 Some(Ordering::Less) => _ = iter.next(),
                 _ => panic!("nothing compared"),
             }
@@ -255,6 +332,8 @@ impl<'a> Iterator for SSTableReaderIterator<'a> {
     type Item = SSTableReaderPointer<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
+        let the_offset = self.offset;
+
         // read headers of k-v pair
         let key_len = self.read_varu64() as usize;
         let key_common_len = self.read_varu64() as usize;
@@ -289,6 +368,7 @@ impl<'a> Iterator for SSTableReaderIterator<'a> {
             _key: key,
             _value: value,
             _flags: flags,
+            _offset: the_offset,
         })
     }
 }
@@ -316,6 +396,9 @@ pub struct SSTableReaderPointer<'a> {
 
     /// Item flags.
     _flags: u8,
+
+    /// Offset from file begin.
+    _offset: usize,
 }
 
 impl<'a> KvPointer for SSTableReaderPointer<'a> {

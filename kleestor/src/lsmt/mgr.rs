@@ -157,7 +157,7 @@ impl LsmTree {
         // lookup sstables
         '_lvrest: {
             let _lock = self.lvrest_lock.read().await;
-            for (_loc, ss) in &self.lvrest {
+            for (_loc, ss) in &mut self.lvrest {
                 match ss.get(key) {
                     Some(crate::record::KvData::Tombstone { .. }) => return None,
                     Some(crate::record::KvData::Value { value, .. }) => return Some(value),
