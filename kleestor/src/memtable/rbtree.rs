@@ -41,6 +41,20 @@ impl RBTree<ByteStream, KvEntry> {
             RBTreeIterator { node: ptr }
         }
     }
+
+    /// Insert with internal replacing. Returns mutable reference to old value.
+    pub fn insert_internal(&mut self, key: ByteStream, record: KvData) -> Option<()> {
+        unsafe {
+            let value = KvEntry::new(record);
+            let (old_value, new_value) = match self.insert_wrap(key, value, false) {
+                Some(Some(group)) => group,
+                Some(None) => unreachable!(),
+                None => return None,
+            };
+            old_value.record = new_value.record;
+            Some(())
+        }
+    }
 }
 
 /// Tree node iterator manager.
@@ -127,7 +141,12 @@ impl<K: Ord + Eq, V> MemTable<K, V> for RBTree<K, V> {
     }
 
     fn insert(&mut self, key: K, value: V) -> Option<()> {
-        unsafe { self.insert_wrap(key, value) }
+        unsafe {
+            match self.insert_wrap(key, value, true) {
+                Some(_) => Some(()),
+                None => None,
+            }
+        }
     }
 
     fn remove(&mut self, _key: &K) -> Result<(), ()> {
@@ -248,13 +267,25 @@ impl<K: Ord + Eq, V> RBTree<K, V> {
     /// Insert key-value pair into tree. `Some` is returned with when an
     /// existing value is overwritten. `None` is returned if no such value
     /// existed with `key`.
-    unsafe fn insert_wrap(&mut self, key: K, value: V) -> Option<()> {
+    ///
+    /// When `overwrite` is set to false, a `Some(Some(...))` is returned so
+    /// that you can have that value back, and the old value reference.
+    unsafe fn insert_wrap(
+        &mut self,
+        key: K,
+        value: V,
+        overwrite: bool,
+    ) -> Option<Option<(&mut V, V)>> {
         let mut p = self.root; // the to-be parent of `n`
         while p != ptr::null_mut() {
             if key == (*p).key {
-                // changing value and just leaving
-                (*p).value = value;
-                return Some(());
+                if overwrite {
+                    // changing value and just leaving
+                    (*p).value = value;
+                    return Some(None);
+                } else {
+                    return Some(Some((&mut (*p).value, value)));
+                }
             } else if key < (*p).key {
                 if (*p).child[0] == ptr::null_mut() {
                     self.insert_cases(Node::new(key, value), p, 0);

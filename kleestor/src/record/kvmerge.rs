@@ -1,7 +1,6 @@
 use crate::record::{ByteStream, KvDataRef, KvEntry, KvPointer};
-use crate::utils::{self, reborrow};
+use crate::utils;
 use std::cmp::Ordering;
-use std::mem;
 
 /// Joins a list of [`Iterator<KvPointer>`] with priority. Earlier items have
 /// higher priority and will override all latter items with the same key.

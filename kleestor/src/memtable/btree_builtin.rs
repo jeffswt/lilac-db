@@ -22,8 +22,10 @@ impl<K: Ord + Eq, V> MemTable<K, V> for BTreeBuiltin<K, V> {
     }
 
     fn insert(&mut self, key: K, value: V) -> Option<()> {
-        self.proxy.insert(key, value);
-        Some(())
+        match self.proxy.insert(key, value) {
+            Some(_) => Some(()),
+            None => None,
+        }
     }
 
     fn remove(&mut self, _key: &K) -> Result<(), ()> {

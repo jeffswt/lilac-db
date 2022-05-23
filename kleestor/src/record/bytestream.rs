@@ -7,12 +7,18 @@ pub struct ByteStream {
 }
 
 impl ByteStream {
+    pub fn new() -> Self {
+        Self { data: vec![] }
+    }
+
     pub fn from_vec(bytes: Vec<u8>) -> Self {
         Self { data: bytes }
     }
 
     pub fn from_slice(bytes: &[u8]) -> Self {
-        Self { data: Vec::from(bytes) }
+        Self {
+            data: Vec::from(bytes),
+        }
     }
 
     pub fn as_ref(&self) -> &[u8] {
@@ -126,6 +132,18 @@ impl ByteStream {
 
     pub fn ref_partial_cmp(&self, other: &[u8]) -> Option<Ordering> {
         Self::ref_2_partial_cmp(self.as_ref(), other)
+    }
+}
+
+impl From<&ByteStream> for ByteStream {
+    fn from(other: &ByteStream) -> Self {
+        Self::from_slice(&other.data)
+    }
+}
+
+impl From<&[u8]> for ByteStream {
+    fn from(other: &[u8]) -> Self {
+        Self::from_slice(other)
     }
 }
 

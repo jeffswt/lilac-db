@@ -243,12 +243,11 @@ impl TransactionMgrImpl {
     }
 
     /// Manually complete a transaction, notifying dependent clients.
-    pub async unsafe fn commit(&mut self, trans: &mut Transaction) -> Result<(), ()> {
+    pub async unsafe fn commit(&mut self, trans: &mut Transaction) -> () {
         let _lock_t = trans.lock.lock().await;
 
         trans.state = TransactionState::Committed;
         trans.await_finish.notify_waiters();
-        Ok(())
     }
 
     /// Manually abandon a transaction, reverting all executed changes and
