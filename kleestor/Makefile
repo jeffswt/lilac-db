@@ -5,8 +5,8 @@ fix/style:
 
 build/release:
 	@"$(BIN_ECHO)" "Building KleeStor to target 'release'..."
-	@"$(BIN_CARGO)" build
-	@"$(BIN_CARGO)" build 2>&1 | cat > "$(ARG_ARTIFACT_ROOT)/cargo_build.txt"
+	# @"$(BIN_CARGO)" build
+	# @"$(BIN_CARGO)" build 2>&1 | cat > "$(ARG_ARTIFACT_ROOT)/cargo_build.txt"
 
 test/unit:
 	@"$(BIN_ECHO)" "Executing unit tests on KleeStor..."
