@@ -1,0 +1,16 @@
+[package]
+name = "kleestor"
+description = "Key-value storage engine for LilacDB, named after Klee."
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+fasthash = "^0.4.0"
+futures = "^0.3.21"
+futures-locks = "^0.7.0"
+json = "^0.12.4"
+memmap = "^0.7.0"
+tokio = { version = "^1.18.2", features = ["sync"] }
+lru = "^0.7.5"

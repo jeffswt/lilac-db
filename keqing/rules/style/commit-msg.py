@@ -27,7 +27,13 @@ class CommitScope(enum.Enum):
     """Project scopes accepted by Keqing."""
 
     any = "*"
-    keqing = "keqing"
+    keqing = "keqing"  # Version Control Utility
+    kleestor = "kleestor"  # Storage engine
+    kleestor_memtable = "memtable"  # Memory-only part of storage engine
+    kleestor_bloomfilter = "kbloomf"  # Bloom filter for storage engine
+    kleestor_sfhash = "sfhash"  # super-fast hash algorithm for storage engine
+    kleestor_sstable = "sstable"  # string table for storage engine
+    kleestor_lsmtree = "lsmtree"  # log-structure-merge tree for storage engine
 
 
 @dataclasses.dataclass
